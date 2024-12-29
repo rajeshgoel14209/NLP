@@ -1,64 +1,60 @@
-import pandas as pd
-
-# Example DataFrame
-data = {
-    "Name": ["Alice", "Bob", "Charlie"],
-    "Age": [30, 25, 35],
-    "Occupation": ["Engineer", "Designer", "Teacher"]
-}
-df = pd.DataFrame(data)
-
-# Convert DataFrame to a plain text table
-def dataframe_to_plain_text(df):
-    headers = df.columns.tolist()
-    rows = df.values.tolist()
-    col_widths = [max(len(str(item)) for item in [header] + list(df[col])) for header, col in zip(headers, df.columns)]
-    row_format = " | ".join([f"{{:<{width}}}" for width in col_widths])
-    header_line = row_format.format(*headers)
-    separator_line = "-+-".join(["-" * width for width in col_widths])
-    rows_text = "\n".join([row_format.format(*[str(cell) for cell in row]) for row in rows])
-    return f"{header_line}\n{separator_line}\n{rows_text}"
-
-table_text = dataframe_to_plain_text(df)
-
-
-import openai
-
-response = openai.Completion.create(
-    engine="text-davinci-003",
-    prompt=prompt,
-    max_tokens=100
-)
-
-
-
-
-
-
-from sentence_transformers import SentenceTransformer
 import faiss
+import numpy as np
 
-# Step 1: Embed the DataFrame rows as text entries
-model = SentenceTransformer("all-MiniLM-L6-v2")
-data_rows = df.apply(lambda row: " | ".join(row.astype(str)), axis=1).tolist()
-embeddings = model.encode(data_rows)
+# Example metadata and embeddings
+metadata = [
+    {"id": 1, "name": "Alice", "age": 30, "occupation": "Engineer"},
+    {"id": 2, "name": "Bob", "age": 25, "occupation": "Designer"},
+    {"id": 3, "name": "Charlie", "age": 35, "occupation": "Teacher"},
+]
 
-# Step 2: Build FAISS index
-index = faiss.IndexFlatL2(embeddings.shape[1])
-index.add(embeddings)
+# Example embeddings (3D vectors for demonstration)
+embeddings = np.array([
+    [0.1, 0.2, 0.3],
+    [0.4, 0.5, 0.6],
+    [0.7, 0.8, 0.9]
+], dtype=np.float32)
 
-# Step 3: Retrieve relevant rows for a query
-query_embedding = model.encode(["oldest person in the table"])[0]
-_, indices = index.search(query_embedding.reshape(1, -1), k=1)
+# Build FAISS index
+dimension = embeddings.shape[1]  # Dimensionality of the vectors
+index = faiss.IndexFlatL2(dimension)  # L2 (Euclidean) distance
+index.add(embeddings)  # Add embeddings to the index
 
-# Step 4: Use retrieved row(s) in the LLM prompt
-retrieved_row = data_rows[indices[0][0]]
-retrieved_prompt = f"""
-Below is a row of data related to your query:
+# Metadata mapping: FAISS index to metadata
+metadata_mapping = {i: metadata[i] for i in range(len(metadata))}
 
-{retrieved_row}
+# Function for vector search
+def vector_search(query_vector, index, metadata_mapping, top_k=2):
+    """
+    Perform vector search in FAISS and retrieve metadata.
 
-Please answer the query: {query}
-"""
+    Args:
+        query_vector (np.ndarray): Query vector (1D array).
+        index (faiss.Index): FAISS index.
+        metadata_mapping (dict): Mapping of index to metadata.
+        top_k (int): Number of top results to retrieve.
 
+    Returns:
+        list of dict: Retrieved metadata with distances.
+    """
+    query_vector = query_vector.reshape(1, -1).astype(np.float32)  # Reshape for FAISS
+    distances, indices = index.search(query_vector, top_k)  # Perform search
 
+    results = []
+    for dist, idx in zip(distances[0], indices[0]):
+        if idx != -1:  # Ensure valid index
+            result = metadata_mapping[idx]
+            result["distance"] = dist
+            results.append(result)
+    return results
+
+# Example query vector
+query = np.array([0.1, 0.2, 0.25], dtype=np.float32)
+
+# Perform search
+results = vector_search(query, index, metadata_mapping, top_k=2)
+
+# Print results
+print("Search Results:")
+for result in results:
+    print(result)
