@@ -1,60 +1,50 @@
-import faiss
-import numpy as np
+import pdfplumber
 
-# Example metadata and embeddings
-metadata = [
-    {"id": 1, "name": "Alice", "age": 30, "occupation": "Engineer"},
-    {"id": 2, "name": "Bob", "age": 25, "occupation": "Designer"},
-    {"id": 3, "name": "Charlie", "age": 35, "occupation": "Teacher"},
-]
-
-# Example embeddings (3D vectors for demonstration)
-embeddings = np.array([
-    [0.1, 0.2, 0.3],
-    [0.4, 0.5, 0.6],
-    [0.7, 0.8, 0.9]
-], dtype=np.float32)
-
-# Build FAISS index
-dimension = embeddings.shape[1]  # Dimensionality of the vectors
-index = faiss.IndexFlatL2(dimension)  # L2 (Euclidean) distance
-index.add(embeddings)  # Add embeddings to the index
-
-# Metadata mapping: FAISS index to metadata
-metadata_mapping = {i: metadata[i] for i in range(len(metadata))}
-
-# Function for vector search
-def vector_search(query_vector, index, metadata_mapping, top_k=2):
+def extract_landscape_table(pdf_path):
     """
-    Perform vector search in FAISS and retrieve metadata.
+    Extracts tables from landscape-oriented pages in a PDF document.
 
     Args:
-        query_vector (np.ndarray): Query vector (1D array).
-        index (faiss.Index): FAISS index.
-        metadata_mapping (dict): Mapping of index to metadata.
-        top_k (int): Number of top results to retrieve.
+        pdf_path (str): Path to the PDF file.
 
     Returns:
-        list of dict: Retrieved metadata with distances.
+        list: A list of tables, where each table is represented as a list of rows (lists).
     """
-    query_vector = query_vector.reshape(1, -1).astype(np.float32)  # Reshape for FAISS
-    distances, indices = index.search(query_vector, top_k)  # Perform search
+    tables = []
 
-    results = []
-    for dist, idx in zip(distances[0], indices[0]):
-        if idx != -1:  # Ensure valid index
-            result = metadata_mapping[idx]
-            result["distance"] = dist
-            results.append(result)
-    return results
+    # Open the PDF
+    with pdfplumber.open(pdf_path) as pdf:
+        for page_number, page in enumerate(pdf.pages, start=1):
+            # Check page rotation
+            rotation = page.rotation or 0
+            print(f"Page {page_number}: Rotation = {rotation}°")
 
-# Example query vector
-query = np.array([0.1, 0.2, 0.25], dtype=np.float32)
+            # Correct the orientation if rotated
+            if rotation in [90, 270]:
+                print(f"Normalizing orientation for Page {page_number}")
+                page = page.rotate(-rotation)  # Rotate back to 0 degrees
 
-# Perform search
-results = vector_search(query, index, metadata_mapping, top_k=2)
+            # Extract tables
+            page_tables = page.extract_tables()
+            for table in page_tables:
+                tables.append(table)
 
-# Print results
-print("Search Results:")
-for result in results:
-    print(result)
+    return tables
+
+# Example usage
+pdf_path = "example.pdf"  # Replace with the path to your PDF file
+tables = extract_landscape_table(pdf_path)
+
+# Print extracted tables
+for i, table in enumerate(tables, start=1):
+    print(f"\nTable {i}:")
+    for row in table:
+        print(row)
+
+
+import pandas as pd
+
+for i, table in enumerate(tables, start=1):
+    df = pd.DataFrame(table[1:], columns=table[0])  # Assuming the first row is the header
+    df.to_csv(f"table_{i}.csv", index=False)
+        
