@@ -1,45 +1,202 @@
-def evaluate_condition(item: Dict[str, Any], condition: Dict[str, Any]) -> bool:
-    """
-    Evaluates a single condition on an item.
-
-    Args:
-        item (Dict[str, Any]): The item to evaluate.
-        condition (Dict[str, Any]): A condition with 'field', 'operator', and 'value'.
-
-    Returns:
-        bool: Whether the condition is satisfied.
-    """
-    field = condition["field"]
-    operator = condition["operator"]
-    value = condition["value"]
-
-    if field not in item:
-        return False
-
-    if operator == "==":
-        return item[field] == value
-    elif operator == ">":
-        return item[field] > value
-    elif operator == "<":
-        return item[field] < value
-    elif operator == ">=":
-        return item[field] >= value
-    elif operator == "<=":
-        return item[field] <= value
-    elif operator == "!=":
-        return item[field] != value
-    else:
-        raise ValueError(f"Unsupported operator: {operator}")
-
-def evaluate_all_conditions(item: Dict[str, Any], conditions: List[Dict[str, Any]]) -> bool:
-    """
-    Evaluates a list of conditions on an item. Combines the conditions with `and`.
-
-    Args:
-        item (Dict[str, Any]): The item to evaluate.
-        conditions (List[Dict[str, Any]]): A list of conditions.
-
-    Returns:
-        bool: Whether all conditions are satisfied.
-    """
-    return all(evaluate_condition(item, condition) for condition in conditions)
+[
+"id is 1 and Name is User_1 and age is 21 and Salary is 55873 and occupation is Engineer",
+"id is 2 and Name is User_2 and age is 23 and Salary is 92372 and occupation is Teacher",
+"id is 3 and Name is User_3 and age is 54 and Salary is 83532 and occupation is Teacher",
+"id is 4 and Name is User_4 and age is 32 and Salary is 111338 and occupation is Engineer",
+"id is 5 and Name is User_5 and age is 39 and Salary is 94484 and occupation is Teacher",
+"id is 6 and Name is User_6 and age is 20 and Salary is 69018 and occupation is Designer",
+"id is 7 and Name is User_7 and age is 32 and Salary is 110271 and occupation is Engineer",
+"id is 8 and Name is User_8 and age is 55 and Salary is 32786 and occupation is Clerk",
+"id is 9 and Name is User_9 and age is 62 and Salary is 93554 and occupation is Clerk",
+"id is 10 and Name is User_10 and age is 25 and Salary is 94489 and occupation is Engineer",
+"id is 11 and Name is User_11 and age is 31 and Salary is 58281 and occupation is Manager",
+"id is 12 and Name is User_12 and age is 62 and Salary is 41485 and occupation is Engineer",
+"id is 13 and Name is User_13 and age is 48 and Salary is 79706 and occupation is Engineer",
+"id is 14 and Name is User_14 and age is 62 and Salary is 43670 and occupation is Engineer",
+"id is 15 and Name is User_15 and age is 27 and Salary is 74566 and occupation is Clerk",
+"id is 16 and Name is User_16 and age is 58 and Salary is 72910 and occupation is Engineer",
+"id is 17 and Name is User_17 and age is 44 and Salary is 87951 and occupation is Clerk",
+"id is 18 and Name is User_18 and age is 63 and Salary is 80263 and occupation is Manager",
+"id is 19 and Name is User_19 and age is 31 and Salary is 37699 and occupation is Clerk",
+"id is 20 and Name is User_20 and age is 32 and Salary is 92080 and occupation is Designer",
+"id is 21 and Name is User_21 and age is 62 and Salary is 34016 and occupation is Engineer",
+"id is 22 and Name is User_22 and age is 40 and Salary is 77058 and occupation is Engineer",
+"id is 23 and Name is User_23 and age is 53 and Salary is 77501 and occupation is Engineer",
+"id is 24 and Name is User_24 and age is 36 and Salary is 89154 and occupation is Teacher",
+"id is 25 and Name is User_25 and age is 39 and Salary is 69034 and occupation is Designer",
+"id is 26 and Name is User_26 and age is 50 and Salary is 63315 and occupation is Clerk",
+"id is 27 and Name is User_27 and age is 51 and Salary is 84137 and occupation is Clerk",
+"id is 28 and Name is User_28 and age is 64 and Salary is 80307 and occupation is Engineer",
+"id is 29 and Name is User_29 and age is 19 and Salary is 108176 and occupation is Manager",
+"id is 30 and Name is User_30 and age is 33 and Salary is 81925 and occupation is Clerk",
+"id is 31 and Name is User_31 and age is 43 and Salary is 102571 and occupation is Engineer",
+"id is 32 and Name is User_32 and age is 48 and Salary is 94624 and occupation is Teacher",
+"id is 33 and Name is User_33 and age is 43 and Salary is 45520 and occupation is Designer",
+"id is 34 and Name is User_34 and age is 34 and Salary is 80533 and occupation is Teacher",
+"id is 35 and Name is User_35 and age is 50 and Salary is 36868 and occupation is Engineer",
+"id is 36 and Name is User_36 and age is 46 and Salary is 71019 and occupation is Designer",
+"id is 37 and Name is User_37 and age is 57 and Salary is 114817 and occupation is Engineer",
+"id is 38 and Name is User_38 and age is 25 and Salary is 54438 and occupation is Teacher",
+"id is 39 and Name is User_39 and age is 32 and Salary is 88957 and occupation is Engineer",
+"id is 40 and Name is User_40 and age is 30 and Salary is 92897 and occupation is Designer",
+"id is 41 and Name is User_41 and age is 62 and Salary is 88750 and occupation is Manager",
+"id is 42 and Name is User_42 and age is 23 and Salary is 99958 and occupation is Teacher",
+"id is 43 and Name is User_43 and age is 47 and Salary is 73355 and occupation is Teacher",
+"id is 44 and Name is User_44 and age is 65 and Salary is 95132 and occupation is Designer",
+"id is 45 and Name is User_45 and age is 20 and Salary is 62210 and occupation is Manager",
+"id is 46 and Name is User_46 and age is 39 and Salary is 62211 and occupation is Clerk",
+"id is 47 and Name is User_47 and age is 48 and Salary is 84479 and occupation is Teacher",
+"id is 48 and Name is User_48 and age is 23 and Salary is 32224 and occupation is Clerk",
+"id is 49 and Name is User_49 and age is 20 and Salary is 61300 and occupation is Engineer",
+"id is 50 and Name is User_50 and age is 20 and Salary is 76827 and occupation is Teacher",
+"id is 51 and Name is User_51 and age is 49 and Salary is 112042 and occupation is Manager",
+"id is 52 and Name is User_52 and age is 42 and Salary is 43117 and occupation is Engineer",
+"id is 53 and Name is User_53 and age is 51 and Salary is 47613 and occupation is Manager",
+"id is 54 and Name is User_54 and age is 23 and Salary is 63713 and occupation is Designer",
+"id is 55 and Name is User_55 and age is 20 and Salary is 53525 and occupation is Engineer",
+"id is 56 and Name is User_56 and age is 54 and Salary is 30667 and occupation is Clerk",
+"id is 57 and Name is User_57 and age is 26 and Salary is 95885 and occupation is Clerk",
+"id is 58 and Name is User_58 and age is 61 and Salary is 70310 and occupation is Manager",
+"id is 59 and Name is User_59 and age is 53 and Salary is 117330 and occupation is Teacher",
+"id is 60 and Name is User_60 and age is 42 and Salary is 45032 and occupation is Designer",
+"id is 61 and Name is User_61 and age is 32 and Salary is 67324 and occupation is Engineer",
+"id is 62 and Name is User_62 and age is 37 and Salary is 105352 and occupation is Teacher",
+"id is 63 and Name is User_63 and age is 20 and Salary is 39194 and occupation is Clerk",
+"id is 64 and Name is User_64 and age is 43 and Salary is 33722 and occupation is Teacher",
+"id is 65 and Name is User_65 and age is 44 and Salary is 32098 and occupation is Engineer",
+"id is 66 and Name is User_66 and age is 49 and Salary is 105941 and occupation is Engineer",
+"id is 67 and Name is User_67 and age is 65 and Salary is 70480 and occupation is Engineer",
+"id is 68 and Name is User_68 and age is 19 and Salary is 100243 and occupation is Designer",
+"id is 69 and Name is User_69 and age is 59 and Salary is 63638 and occupation is Designer",
+"id is 70 and Name is User_70 and age is 44 and Salary is 68397 and occupation is Designer",
+"id is 71 and Name is User_71 and age is 22 and Salary is 95265 and occupation is Designer",
+"id is 72 and Name is User_72 and age is 24 and Salary is 55194 and occupation is Designer",
+"id is 73 and Name is User_73 and age is 43 and Salary is 86833 and occupation is Manager",
+"id is 74 and Name is User_74 and age is 18 and Salary is 70710 and occupation is Manager",
+"id is 75 and Name is User_75 and age is 28 and Salary is 85381 and occupation is Teacher",
+"id is 76 and Name is User_76 and age is 58 and Salary is 77176 and occupation is Manager",
+"id is 77 and Name is User_77 and age is 24 and Salary is 34688 and occupation is Designer",
+"id is 78 and Name is User_78 and age is 51 and Salary is 80953 and occupation is Engineer",
+"id is 79 and Name is User_79 and age is 46 and Salary is 115768 and occupation is Engineer",
+"id is 80 and Name is User_80 and age is 50 and Salary is 68854 and occupation is Clerk",
+"id is 81 and Name is User_81 and age is 24 and Salary is 64738 and occupation is Clerk",
+"id is 82 and Name is User_82 and age is 41 and Salary is 99626 and occupation is Engineer",
+"id is 83 and Name is User_83 and age is 43 and Salary is 54490 and occupation is Manager",
+"id is 84 and Name is User_84 and age is 35 and Salary is 44914 and occupation is Teacher",
+"id is 85 and Name is User_85 and age is 22 and Salary is 36734 and occupation is Teacher",
+"id is 86 and Name is User_86 and age is 38 and Salary is 58667 and occupation is Teacher",
+"id is 87 and Name is User_87 and age is 54 and Salary is 57629 and occupation is Clerk",
+"id is 88 and Name is User_88 and age is 22 and Salary is 65062 and occupation is Manager",
+"id is 89 and Name is User_89 and age is 49 and Salary is 105754 and occupation is Designer",
+"id is 90 and Name is User_90 and age is 29 and Salary is 86539 and occupation is Designer",
+"id is 91 and Name is User_91 and age is 42 and Salary is 50761 and occupation is Clerk",
+"id is 92 and Name is User_92 and age is 40 and Salary is 91266 and occupation is Clerk",
+"id is 93 and Name is User_93 and age is 34 and Salary is 32005 and occupation is Clerk",
+"id is 94 and Name is User_94 and age is 47 and Salary is 74620 and occupation is Engineer",
+"id is 95 and Name is User_95 and age is 31 and Salary is 76939 and occupation is Designer",
+"id is 96 and Name is User_96 and age is 50 and Salary is 104978 and occupation is Engineer",
+"id is 97 and Name is User_97 and age is 30 and Salary is 74327 and occupation is Designer",
+"id is 98 and Name is User_98 and age is 24 and Salary is 111022 and occupation is Engineer",
+"id is 99 and Name is User_99 and age is 48 and Salary is 106243 and occupation is Designer",
+"id is 100 and Name is User_100 and age is 44 and Salary is 70635 and occupation is Manager",
+"id is 101 and Name is User_101 and age is 62 and Salary is 98249 and occupation is Manager",
+"id is 102 and Name is User_102 and age is 50 and Salary is 83876 and occupation is Teacher",
+"id is 103 and Name is User_103 and age is 47 and Salary is 58432 and occupation is Teacher",
+"id is 104 and Name is User_104 and age is 25 and Salary is 86480 and occupation is Clerk",
+"id is 105 and Name is User_105 and age is 28 and Salary is 65376 and occupation is Manager",
+"id is 106 and Name is User_106 and age is 45 and Salary is 88778 and occupation is Manager",
+"id is 107 and Name is User_107 and age is 19 and Salary is 71062 and occupation is Teacher",
+"id is 108 and Name is User_108 and age is 26 and Salary is 87518 and occupation is Clerk",
+"id is 109 and Name is User_109 and age is 21 and Salary is 72630 and occupation is Designer",
+"id is 110 and Name is User_110 and age is 56 and Salary is 48350 and occupation is Teacher",
+"id is 111 and Name is User_111 and age is 64 and Salary is 95389 and occupation is Manager",
+"id is 112 and Name is User_112 and age is 29 and Salary is 99067 and occupation is Manager",
+"id is 113 and Name is User_113 and age is 62 and Salary is 82222 and occupation is Teacher",
+"id is 114 and Name is User_114 and age is 40 and Salary is 99612 and occupation is Designer",
+"id is 115 and Name is User_115 and age is 35 and Salary is 115716 and occupation is Clerk",
+"id is 116 and Name is User_116 and age is 49 and Salary is 90301 and occupation is Teacher",
+"id is 117 and Name is User_117 and age is 62 and Salary is 90616 and occupation is Clerk",
+"id is 118 and Name is User_118 and age is 46 and Salary is 47192 and occupation is Teacher",
+"id is 119 and Name is User_119 and age is 36 and Salary is 111586 and occupation is Clerk",
+"id is 120 and Name is User_120 and age is 51 and Salary is 61910 and occupation is Designer",
+"id is 121 and Name is User_121 and age is 26 and Salary is 69151 and occupation is Manager",
+"id is 122 and Name is User_122 and age is 46 and Salary is 52618 and occupation is Clerk",
+"id is 123 and Name is User_123 and age is 18 and Salary is 106841 and occupation is Teacher",
+"id is 124 and Name is User_124 and age is 21 and Salary is 119674 and occupation is Engineer",
+"id is 125 and Name is User_125 and age is 25 and Salary is 94617 and occupation is Clerk",
+"id is 126 and Name is User_126 and age is 34 and Salary is 76903 and occupation is Clerk",
+"id is 127 and Name is User_127 and age is 61 and Salary is 64580 and occupation is Clerk",
+"id is 128 and Name is User_128 and age is 57 and Salary is 32254 and occupation is Designer",
+"id is 129 and Name is User_129 and age is 23 and Salary is 51945 and occupation is Designer",
+"id is 130 and Name is User_130 and age is 23 and Salary is 41698 and occupation is Designer",
+"id is 131 and Name is User_131 and age is 57 and Salary is 54477 and occupation is Engineer",
+"id is 132 and Name is User_132 and age is 53 and Salary is 116180 and occupation is Manager",
+"id is 133 and Name is User_133 and age is 59 and Salary is 94902 and occupation is Engineer",
+"id is 134 and Name is User_134 and age is 44 and Salary is 72747 and occupation is Clerk",
+"id is 135 and Name is User_135 and age is 26 and Salary is 115791 and occupation is Clerk",
+"id is 136 and Name is User_136 and age is 63 and Salary is 61254 and occupation is Engineer",
+"id is 137 and Name is User_137 and age is 57 and Salary is 86769 and occupation is Teacher",
+"id is 138 and Name is User_138 and age is 63 and Salary is 100355 and occupation is Clerk",
+"id is 139 and Name is User_139 and age is 25 and Salary is 30502 and occupation is Teacher",
+"id is 140 and Name is User_140 and age is 23 and Salary is 110126 and occupation is Designer",
+"id is 141 and Name is User_141 and age is 48 and Salary is 64419 and occupation is Manager",
+"id is 142 and Name is User_142 and age is 60 and Salary is 106190 and occupation is Clerk",
+"id is 143 and Name is User_143 and age is 47 and Salary is 52894 and occupation is Manager",
+"id is 144 and Name is User_144 and age is 48 and Salary is 101827 and occupation is Teacher",
+"id is 145 and Name is User_145 and age is 60 and Salary is 33905 and occupation is Teacher",
+"id is 146 and Name is User_146 and age is 58 and Salary is 37697 and occupation is Clerk",
+"id is 147 and Name is User_147 and age is 60 and Salary is 65955 and occupation is Manager",
+"id is 148 and Name is User_148 and age is 60 and Salary is 90126 and occupation is Teacher",
+"id is 149 and Name is User_149 and age is 49 and Salary is 64402 and occupation is Clerk",
+"id is 150 and Name is User_150 and age is 31 and Salary is 58338 and occupation is Clerk",
+"id is 151 and Name is User_151 and age is 46 and Salary is 77464 and occupation is Manager",
+"id is 152 and Name is User_152 and age is 35 and Salary is 119697 and occupation is Teacher",
+"id is 153 and Name is User_153 and age is 41 and Salary is 47365 and occupation is Designer",
+"id is 154 and Name is User_154 and age is 20 and Salary is 61037 and occupation is Clerk",
+"id is 155 and Name is User_155 and age is 62 and Salary is 81468 and occupation is Engineer",
+"id is 156 and Name is User_156 and age is 33 and Salary is 70015 and occupation is Clerk",
+"id is 157 and Name is User_157 and age is 64 and Salary is 117336 and occupation is Manager",
+"id is 158 and Name is User_158 and age is 58 and Salary is 46204 and occupation is Manager",
+"id is 159 and Name is User_159 and age is 21 and Salary is 85426 and occupation is Manager",
+"id is 160 and Name is User_160 and age is 25 and Salary is 67292 and occupation is Clerk",
+"id is 161 and Name is User_161 and age is 19 and Salary is 117635 and occupation is Designer",
+"id is 162 and Name is User_162 and age is 64 and Salary is 96350 and occupation is Teacher",
+"id is 163 and Name is User_163 and age is 55 and Salary is 71756 and occupation is Clerk",
+"id is 164 and Name is User_164 and age is 39 and Salary is 37756 and occupation is Teacher",
+"id is 165 and Name is User_165 and age is 45 and Salary is 54211 and occupation is Manager",
+"id is 166 and Name is User_166 and age is 28 and Salary is 71579 and occupation is Teacher",
+"id is 167 and Name is User_167 and age is 46 and Salary is 39367 and occupation is Engineer",
+"id is 168 and Name is User_168 and age is 25 and Salary is 102977 and occupation is Designer",
+"id is 169 and Name is User_169 and age is 39 and Salary is 82293 and occupation is Teacher",
+"id is 170 and Name is User_170 and age is 58 and Salary is 105018 and occupation is Manager",
+"id is 171 and Name is User_171 and age is 46 and Salary is 51853 and occupation is Teacher",
+"id is 172 and Name is User_172 and age is 54 and Salary is 47572 and occupation is Designer",
+"id is 173 and Name is User_173 and age is 32 and Salary is 107562 and occupation is Designer",
+"id is 174 and Name is User_174 and age is 47 and Salary is 74621 and occupation is Clerk",
+"id is 175 and Name is User_175 and age is 59 and Salary is 37620 and occupation is Clerk",
+"id is 176 and Name is User_176 and age is 19 and Salary is 90045 and occupation is Engineer",
+"id is 177 and Name is User_177 and age is 22 and Salary is 101504 and occupation is Engineer",
+"id is 178 and Name is User_178 and age is 23 and Salary is 44511 and occupation is Designer",
+"id is 179 and Name is User_179 and age is 18 and Salary is 49029 and occupation is Teacher",
+"id is 180 and Name is User_180 and age is 18 and Salary is 78017 and occupation is Clerk",
+"id is 181 and Name is User_181 and age is 23 and Salary is 76591 and occupation is Teacher",
+"id is 182 and Name is User_182 and age is 57 and Salary is 39515 and occupation is Designer",
+"id is 183 and Name is User_183 and age is 54 and Salary is 112275 and occupation is Clerk",
+"id is 184 and Name is User_184 and age is 42 and Salary is 78781 and occupation is Clerk",
+"id is 185 and Name is User_185 and age is 20 and Salary is 86490 and occupation is Designer",
+"id is 186 and Name is User_186 and age is 59 and Salary is 53908 and occupation is Teacher",
+"id is 187 and Name is User_187 and age is 58 and Salary is 57426 and occupation is Designer",
+"id is 188 and Name is User_188 and age is 21 and Salary is 97741 and occupation is Designer",
+"id is 189 and Name is User_189 and age is 61 and Salary is 107383 and occupation is Designer",
+"id is 190 and Name is User_190 and age is 30 and Salary is 119529 and occupation is Clerk",
+"id is 191 and Name is User_191 and age is 24 and Salary is 74451 and occupation is Engineer",
+"id is 192 and Name is User_192 and age is 57 and Salary is 31415 and occupation is Engineer",
+"id is 193 and Name is User_193 and age is 64 and Salary is 48699 and occupation is Engineer",
+"id is 194 and Name is User_194 and age is 65 and Salary is 110821 and occupation is Manager",
+"id is 195 and Name is User_195 and age is 24 and Salary is 65537 and occupation is Manager",
+"id is 196 and Name is User_196 and age is 36 and Salary is 106807 and occupation is Clerk",
+"id is 197 and Name is User_197 and age is 37 and Salary is 95119 and occupation is Teacher",
+"id is 198 and Name is User_198 and age is 29 and Salary is 49761 and occupation is Designer",
+"id is 199 and Name is User_199 and age is 59 and Salary is 98986 and occupation is Engineer",
+"id is 200 and Name is User_200 and age is 40 and Salary is 49985 and occupation is Engineer"
+]
