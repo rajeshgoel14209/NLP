@@ -1,55 +1,28 @@
-Inputs in LLM Fine-tuning
-Text Data:
+I need the output in the form of a list of dictionaries. Each dictionary should have the following keys: ["title", "author", "year"]. Ensure the values match the requested format.
 
-Fine-tuning typically requires a dataset with input-output pairs, such as:
-Plain text (for language modeling).
-Question-answer pairs (for QA tasks).
-Prompts and responses (for instruction-following tasks).
-Context and completion pairs (for generative tasks).
-Format:
-Unsupervised Fine-tuning: Continuous text (e.g., books, articles).
-Supervised Fine-tuning: Structured pairs (e.g., prompts and labels).
-Tokenized Inputs:
+Here is an example of the desired output format:
+[
+    {"title": "Book Title 1", "author": "Author Name 1", "year": 2000},
+    {"title": "Book Title 2", "author": "Author Name 2", "year": 2005}
+]
 
-Raw text is tokenized into subword units (tokens) using the tokenizer associated with the LLM (e.g., Byte Pair Encoding, SentencePiece).
-For sequence-to-sequence models, both input and output texts are tokenized.
-Attention Masks:
+Now, based on the following input, generate the corresponding list of dictionaries:
 
-Specify which tokens the model should attend to (important for handling padding in batches).
-Labels:
+Input:
+1. "To Kill a Mockingbird" by Harper Lee, published in 1960.
+2. "1984" by George Orwell, published in 1949.
+3. "The Great Gatsby" by F. Scott Fitzgerald, published in 1925.
 
-In supervised tasks, labels are the ground truth outputs. For generative tasks, these are often tokenized versions of the desired outputs.
-Special Tokens:
+Output:
 
-Tokens for task-specific signals, such as <BOS> (beginning of sentence), <EOS> (end of sentence), or separator tokens (<SEP>).
-Loss Functions in LLM Fine-tuning
-The choice of loss function depends on the task:
 
-1. Causal Language Modeling (CLM)
-Task: Predict the next token given previous tokens (autoregressive modeling).
-Loss Function:
-Cross-Entropy Loss over the predicted token probabilities and the ground truth token.
-2. Masked Language Modeling (MLM)
-Task: Predict masked tokens in a sequence (e.g., BERT-style models).
-Loss Function:
-Cross-Entropy Loss computed only over the masked tokens.
-3. Sequence-to-Sequence (Seq2Seq) Learning
-Task: Translate an input sequence into an output sequence (e.g., summarization, translation).
-Loss Function:
-Cross-Entropy Loss applied to the decoder's outputs and the ground truth tokens.
-4. Token Classification
-Task: Assign a label to each token in the input (e.g., named entity recognition, part-of-speech tagging).
-Loss Function:
-Cross-Entropy Loss computed at the token level.
-5. Sequence Classification
-Task: Assign a single label to an entire sequence (e.g., sentiment analysis, text classification).
-Loss Function:
-Cross-Entropy Loss computed at the sequence level.
-6. Contrastive Loss
-Task: Learn embeddings where similar inputs are closer in vector space (e.g., sentence embeddings, retrieval tasks).
-Loss Function:
-Contrastive Loss, such as Triplet Loss or NT-Xent Loss.
-7. Reinforcement Learning with Human Feedback (RLHF)
-Task: Fine-tune the model's outputs to align with human preferences.
-Loss Function:
-A combination of reward models and policy gradients (e.g., PPO) to optimize the model's policy.
+Expected LLM Response:
+
+[    {"title": "To Kill a Mockingbird", "author": "Harper Lee", "year": 1960},    {"title": "1984", "author": "George Orwell", "year": 1949},    {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald", "year": 1925}]
+
+
+Tips for Prompting
+Be Explicit: Clearly describe the required keys and values.
+Provide an Example: Show the LLM the exact format you want.
+Repeat Key Points: Reinforce the desired structure in the prompt.
+Validate Format: Include instructions to ensure no extra text appears outside the list of dictionaries.
