@@ -1,53 +1,33 @@
-from langchain.prompts import PromptTemplate
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
 
-# Define the prompt template
-template = """
-You are an intelligent assistant. Your job is to extract specific IDs from the user's question. 
-The IDs are numeric or alphanumeric strings, and they may be embedded within the question.
-If no IDs are found, respond with "No IDs found."
+# Load the BERT-based model and tokenizer
+model_name = "bert-large-uncased-whole-word-masking-finetuned-squad"  # Pretrained BERT for QA
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 
-Instruction: Extract all IDs from the following question.
 
-User Question: "{question}"
+# Create a QA pipeline
+qa_pipeline = pipeline("question-answering", model=model, tokenizer=tokenizer)
 
-Your Answer:
+def answer_question(question, context):
+    result = qa_pipeline({
+        "question": question,
+        "context": context
+    })
+    return result["answer"]
+
+# Example Context
+context = """
+The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris, France. 
+It is named after the engineer Gustave Eiffel, whose company designed and built the tower.
 """
 
-# Create the PromptTemplate
-id_extraction_prompt = PromptTemplate(
-    input_variables=["question"],  # Variables to pass to the prompt
-    template=template
-)
+# Example Question
+question = "Who designed the Eiffel Tower?"
 
-# Example usage
-user_question = "Can you retrieve the details for IDs 12345, AB6789, and XYZ123?"
-formatted_prompt = id_extraction_prompt.format(question=user_question)
-
-print("Generated Prompt:")
-print(formatted_prompt)
+# Get the Answer
+answer = answer_question(question, context)
+print(f"Question: {question}")
+print(f"Answer: {answer}")
 
 
-
-from langchain.chains import LLMChain
-from langchain.llms import HuggingFacePipeline
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-
-# Load the model (e.g., Mistral)
-def load_llm():
-    model_name = "mistral-7b"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-    text_pipeline = pipeline("text-generation", model=model, tokenizer=tokenizer, max_length=256)
-    return HuggingFacePipeline(pipeline=text_pipeline)
-
-# Create the LLM instance
-llm = load_llm()
-
-# Create the LLMChain
-chain = LLMChain(llm=llm, prompt=id_extraction_prompt)
-
-# Run the chain with a user question
-response = chain.run(question=user_question)
-
-print("LLM Response:")
-print(response)
