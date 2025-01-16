@@ -1,56 +1,37 @@
-from transformers import GPT2Tokenizer, GPT2Model
-import numpy as np
+from transformers import AutoTokenizer, AutoModel
 
-def check_max_token_capacity_and_create_embedding(text, model_name='gpt2'):
+def check_max_token_capacity_gte(model_name):
     """
-    Check the maximum token length for a model, create embeddings, 
-    and revert embeddings back to the original text.
+    Check the maximum token capacity of a GTE (or similar transformer-based) model.
     
     Args:
-        text (str): The input text to process.
-        model_name (str): Name of the transformer model (e.g., 'gpt2').
+        model_name (str): Name of the model (e.g., 'gte-base', 'gte-large').
     
     Returns:
-        dict: A dictionary with token length, embeddings, and reverted text.
+        dict: A dictionary with model details including max token capacity.
     """
-    # Load the tokenizer and model
-    tokenizer = GPT2Tokenizer.from_pretrained(model_name)
-    model = GPT2Model.from_pretrained(model_name)
-    
-    # Tokenize the input text
-    tokens = tokenizer.encode(text, return_tensors='pt')
-    
-    # Get the token length
-    token_length = tokens.size(1)
-    
-    # Check maximum token capacity of the model
-    max_token_capacity = model.config.n_positions
-    
-    if token_length > max_token_capacity:
-        raise ValueError(f"Input exceeds the max token length of {max_token_capacity} tokens.")
+    try:
+        # Load the tokenizer and model
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModel.from_pretrained(model_name)
+        
+        # Get the maximum token capacity
+        max_token_capacity = model.config.max_position_embeddings
 
-    # Generate embeddings
-    with torch.no_grad():
-        outputs = model(tokens)
-        embeddings = outputs.last_hidden_state.numpy()  # Convert to numpy for inspection
-    
-    # Decode tokens back to original text
-    reverted_text = tokenizer.decode(tokens[0], skip_special_tokens=True)
-    
-    return {
-        "token_length": token_length,
-        "max_token_capacity": max_token_capacity,
-        "embeddings": embeddings,
-        "reverted_text": reverted_text
-    }
-
+        return {
+            "model_name": model_name,
+            "max_token_capacity": max_token_capacity
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 # Example Usage
-text = "This is a test input to check the token length, generate embeddings, and revert back to text."
-result = check_max_token_capacity_and_create_embedding(text)
+model_name = "sentence-transformers/all-MiniLM-L6-v2"  # Replace with GTE model name
+result = check_max_token_capacity_gte(model_name)
 
-# Display Results
-print(f"Token Length: {result['token_length']}")
-print(f"Max Token Capacity: {result['max_token_capacity']}")
-print(f"Reverted Text: {result['reverted_text']}")
-print(f"Embeddings Shape: {result['embeddings'].shape}")
+# Display the result
+if "error" in result:
+    print(f"Error: {result['error']}")
+else:
+    print(f"Model Name: {result['model_name']}")
+    print(f"Max Token Capacity: {result['max_token_capacity']}")
