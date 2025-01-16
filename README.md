@@ -1,30 +1,56 @@
-def extract_case_ids(query):
+from transformers import GPT2Tokenizer, GPT2Model
+import numpy as np
+
+def check_max_token_capacity_and_create_embedding(text, model_name='gpt2'):
     """
-    Extract all case IDs or business case IDs from a user query.
+    Check the maximum token length for a model, create embeddings, 
+    and revert embeddings back to the original text.
     
     Args:
-        query (str): The user query string.
+        text (str): The input text to process.
+        model_name (str): Name of the transformer model (e.g., 'gpt2').
     
     Returns:
-        list: A list of all matched case IDs or business case IDs.
+        dict: A dictionary with token length, embeddings, and reverted text.
     """
-    # Define regex pattern for case IDs and business case IDs
-    case_id_pattern = r'\b(?:business\s+case|case(?:\s?id)?)\s+(\d+)\b'
+    # Load the tokenizer and model
+    tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    model = GPT2Model.from_pretrained(model_name)
     
-    # Use re.findall to extract all matches
-    matches = re.findall(case_id_pattern, query, flags=re.IGNORECASE)
+    # Tokenize the input text
+    tokens = tokenizer.encode(text, return_tensors='pt')
     
-    return matches
+    # Get the token length
+    token_length = tokens.size(1)
+    
+    # Check maximum token capacity of the model
+    max_token_capacity = model.config.n_positions
+    
+    if token_length > max_token_capacity:
+        raise ValueError(f"Input exceeds the max token length of {max_token_capacity} tokens.")
 
-    # Example queries
-queries = [
-    "What is the review date for case id 786868 and cag id 768667689678969?",
-    "What is the review date for case 786868 and cag id 768667689678969?",
-    "What is the review date for business case 786868 and cag id 768667689678969?",
-    "No case IDs here, just CAG IDs like 768667689678969.",
-]
+    # Generate embeddings
+    with torch.no_grad():
+        outputs = model(tokens)
+        embeddings = outputs.last_hidden_state.numpy()  # Convert to numpy for inspection
+    
+    # Decode tokens back to original text
+    reverted_text = tokenizer.decode(tokens[0], skip_special_tokens=True)
+    
+    return {
+        "token_length": token_length,
+        "max_token_capacity": max_token_capacity,
+        "embeddings": embeddings,
+        "reverted_text": reverted_text
+    }
 
-# Test the function
-for i, query in enumerate(queries, 1):
-    print(f"Query {i}: {query}")
-    print(f"Extracted Case IDs: {extract_case_ids(query)}\n")
+
+# Example Usage
+text = "This is a test input to check the token length, generate embeddings, and revert back to text."
+result = check_max_token_capacity_and_create_embedding(text)
+
+# Display Results
+print(f"Token Length: {result['token_length']}")
+print(f"Max Token Capacity: {result['max_token_capacity']}")
+print(f"Reverted Text: {result['reverted_text']}")
+print(f"Embeddings Shape: {result['embeddings'].shape}")
