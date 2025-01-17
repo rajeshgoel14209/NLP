@@ -46,3 +46,33 @@ elif feedback == "👎 Thumbs Down":
     st.error("Thank you for the feedback! We'll work on improving.")
 else:
     st.info("Please provide your feedback.")
+
+
+
+import streamlit as st
+
+# Initialize session state to track user feedback
+if "user_feedback" not in st.session_state:
+    st.session_state.user_feedback = None  # Track actual user feedback
+
+# Function to handle feedback change
+def handle_feedback_change():
+    st.session_state.user_feedback = feedback
+
+# Radio button for feedback
+feedback = st.radio(
+    "Did you find this helpful?",
+    ("👍 Thumbs Up", "👎 Thumbs Down", "No Feedback"),
+    index=2,  # Default to "No Feedback"
+    on_change=handle_feedback_change,  # Trigger function on change
+)
+
+# Capture feedback only if it's different from the default
+if feedback != "No Feedback":
+    st.session_state.user_feedback = feedback
+
+# Display actual user feedback
+if st.session_state.user_feedback:
+    st.write(f"User feedback: {st.session_state.user_feedback}")
+else:
+    st.info("Please provide your feedback.")    
