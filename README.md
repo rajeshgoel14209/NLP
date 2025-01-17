@@ -1,81 +1,48 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import pandas as pd
-import os
+import streamlit as st
 
-# Initialize FastAPI app
-app = FastAPI()
+# Session state to track button clicks
+if "feedback" not in st.session_state:
+    st.session_state.feedback = None  # Tracks feedback ('up' or 'down')
 
-# Define the input data model
-class Feedback(BaseModel):
-    query: str
-    context: dict  # Context with metadata
-    llm_response: str
-    user_feedback: str
+# Function to handle button clicks
+def handle_feedback(feedback_type):
+    st.session_state.feedback = feedback_type
 
-# Path to store the Excel file
-FEEDBACK_FILE = "feedback_data.xlsx"
+st.write("Did you find this helpful?")
 
-# Function to initialize the Excel file if not exists
-def initialize_excel_file(file_path):
-    if not os.path.exists(file_path):
-        # Create a new DataFrame with column names
-        df = pd.DataFrame(columns=["Query", "Context", "LLM Response", "User Feedback"])
-        df.to_excel(file_path, index=False)
+# Create thumbs up and thumbs down buttons
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("👍 Thumbs Up", key="thumbs_up"):
+        handle_feedback("up")
+with col2:
+    if st.button("👎 Thumbs Down", key="thumbs_down"):
+        handle_feedback("down")
 
-# Initialize the feedback file
-initialize_excel_file(FEEDBACK_FILE)
+# Display feedback result
+if st.session_state.feedback == "up":
+    st.success("Thank you for the positive feedback!")
+elif st.session_state.feedback == "down":
+    st.error("Thank you for the feedback! We'll work on improving.")
 
-@app.post("/submit-feedback/")
-async def submit_feedback(feedback: Feedback):
-    """
-    Endpoint to accept feedback and store it in an Excel file.
-
-    Args:
-        feedback (Feedback): Input query, context, LLM response, and user feedback.
-
-    Returns:
-        dict: Success message with the added data.
-    """
-    try:
-        # Load the existing Excel file
-        df = pd.read_excel(FEEDBACK_FILE)
-
-        # Append the new feedback as a row
-        new_row = {
-            "Query": feedback.query,
-            "Context": feedback.context,
-            "LLM Response": feedback.llm_response,
-            "User Feedback": feedback.user_feedback,
-        }
-        df = df.append(new_row, ignore_index=True)
-
-        # Save the updated DataFrame back to the Excel file
-        df.to_excel(FEEDBACK_FILE, index=False)
-
-        return {"message": "Feedback submitted successfully!", "data": new_row}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+# Prevent clicking both buttons at the same time
+if st.session_state.feedback:
+    st.write(f"You selected: {st.session_state.feedback}")
 
 
-@app.get("/feedback/")
-async def get_feedback():
-    """
-    Endpoint to fetch all feedback from the Excel file.
 
-    Returns:
-        dict: List of all feedback data.
-    """
-    try:
-        # Load the Excel file
-        df = pd.read_excel(FEEDBACK_FILE)
+import streamlit as st
 
-        # Convert the DataFrame to a list of dictionaries
-        feedback_data = df.to_dict(orient="records")
+# Create radio buttons for thumbs up/down
+feedback = st.radio(
+    "Did you find this helpful?",
+    ("👍 Thumbs Up", "👎 Thumbs Down", "No Feedback"),
+    index=2,  # Default to "No Feedback"
+)
 
-        return {"feedback": feedback_data}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-
-
-        
+if feedback == "👍 Thumbs Up":
+    st.success("Thank you for the positive feedback!")
+elif feedback == "👎 Thumbs Down":
+    st.error("Thank you for the feedback! We'll work on improving.")
+else:
+    st.info("Please provide your feedback.")
