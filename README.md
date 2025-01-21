@@ -1,78 +1,98 @@
-import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
-# Session state to track button clicks
-if "feedback" not in st.session_state:
-    st.session_state.feedback = None  # Tracks feedback ('up' or 'down')
+def visualize_embeddings(embeddings, query_vector, labels=None, title="Embedding Distribution"):
+    """
+    Visualize vector embeddings and query vector in 2D space.
+    
+    Args:
+        embeddings (np.ndarray): Array of shape (n_samples, n_features) containing embeddings.
+        query_vector (np.ndarray): Array of shape (n_features,) representing the query embedding.
+        labels (list): Optional list of labels for each embedding (e.g., metadata or cluster).
+        title (str): Title for the plot.
+    """
+    # Ensure query_vector is 2D for concatenation
+    query_vector = query_vector.reshape(1, -1)
+    
+    # Combine embeddings and query vector
+    all_vectors = np.vstack([embeddings, query_vector])
+    
+    # Reduce to 2D using PCA
+    pca = PCA(n_components=2)
+    reduced_vectors = pca.fit_transform(all_vectors)
+    
+    # Split embeddings and query for visualization
+    reduced_embeddings = reduced_vectors[:-1]
+    reduced_query = reduced_vectors[-1]
+    
+    # Plot the embeddings
+    plt.figure(figsize=(10, 7))
+    plt.scatter(reduced_embeddings[:, 0], reduced_embeddings[:, 1], c='blue', label="Embeddings", alpha=0.7)
+    
+    # Highlight the query vector
+    plt.scatter(reduced_query[0], reduced_query[1], c='red', label="Query Vector", marker='X', s=150)
+    
+    # Optionally annotate with labels
+    if labels:
+        for i, label in enumerate(labels):
+            plt.annotate(label, (reduced_embeddings[i, 0], reduced_embeddings[i, 1]), fontsize=8, alpha=0.75)
+    
+    # Add title and legend
+    plt.title(title)
+    plt.xlabel("PCA Component 1")
+    plt.ylabel("PCA Component 2")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.show()
 
-# Function to handle button clicks
-def handle_feedback(feedback_type):
-    st.session_state.feedback = feedback_type
+# Example usage
+# Generate some random embeddings (n_samples=100, n_features=512)
+np.random.seed(42)
+embeddings = np.random.rand(100, 512)
 
-st.write("Did you find this helpful?")
+# Create a random query vector
+query_vector = np.random.rand(512)
 
-# Create thumbs up and thumbs down buttons
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("👍 Thumbs Up", key="thumbs_up"):
-        handle_feedback("up")
-with col2:
-    if st.button("👎 Thumbs Down", key="thumbs_down"):
-        handle_feedback("down")
+# Example metadata labels
+labels = [f"Vec {i}" for i in range(len(embeddings))]
 
-# Display feedback result
-if st.session_state.feedback == "up":
-    st.success("Thank you for the positive feedback!")
-elif st.session_state.feedback == "down":
-    st.error("Thank you for the feedback! We'll work on improving.")
+# Visualize
+visualize_embeddings(embeddings, query_vector, labels=labels)
+Explanation
+Dimensionality Reduction:
 
-# Prevent clicking both buttons at the same time
-if st.session_state.feedback:
-    st.write(f"You selected: {st.session_state.feedback}")
+High-dimensional embeddings (e.g., 512 dimensions) are reduced to 2D using PCA for visualization.
+You can also use t-SNE or UMAP for a non-linear reduction.
+Query Vector:
 
+The query vector is highlighted separately in red with a larger marker.
+Optional Labels:
 
+Metadata or labels for embeddings can be displayed for interpretability.
+Distribution:
 
-import streamlit as st
+The scatter plot shows how the embeddings are distributed relative to the query vector.
+Optional: Use t-SNE for Better Clustering
+python
+Copy
+Edit
+from sklearn.manifold import TSNE
 
-# Create radio buttons for thumbs up/down
-feedback = st.radio(
-    "Did you find this helpful?",
-    ("👍 Thumbs Up", "👎 Thumbs Down", "No Feedback"),
-    index=2,  # Default to "No Feedback"
-)
+# Use t-SNE instead of PCA
+tsne = TSNE(n_components=2, random_state=42)
+reduced_vectors_tsne = tsne.fit_transform(np.vstack([embeddings, query_vector]))
 
-if feedback == "👍 Thumbs Up":
-    st.success("Thank you for the positive feedback!")
-elif feedback == "👎 Thumbs Down":
-    st.error("Thank you for the feedback! We'll work on improving.")
-else:
-    st.info("Please provide your feedback.")
+# Split embeddings and query vector
+reduced_embeddings_tsne = reduced_vectors_tsne[:-1]
+reduced_query_tsne = reduced_vectors_tsne[-1]
 
+# Plot (similar to the PCA example)
+This approach provides an intuitive way to compare the query vector's position relative to the embedding distribution!
 
 
-import streamlit as st
 
-# Initialize session state to track user feedback
-if "user_feedback" not in st.session_state:
-    st.session_state.user_feedback = None  # Track actual user feedback
 
-# Function to handle feedback change
-def handle_feedback_change():
-    st.session_state.user_feedback = feedback
 
-# Radio button for feedback
-feedback = st.radio(
-    "Did you find this helpful?",
-    ("👍 Thumbs Up", "👎 Thumbs Down", "No Feedback"),
-    index=2,  # Default to "No Feedback"
-    on_change=handle_feedback_change,  # Trigger function on change
-)
 
-# Capture feedback only if it's different from the default
-if feedback != "No Feedback":
-    st.session_state.user_feedback = feedback
 
-# Display actual user feedback
-if st.session_state.user_feedback:
-    st.write(f"User feedback: {st.session_state.user_feedback}")
-else:
-    st.info("Please provide your feedback.")    
