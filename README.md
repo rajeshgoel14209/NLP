@@ -1,22 +1,88 @@
-You are an assistant that rewrites user queries into a standard format based on provided examples. Follow the examples strictly and ensure the rewritten query aligns with the given structure.
+Step 1: Install Homebrew (if not already installed)
+Homebrew is a package manager for macOS that simplifies software installation.
 
-### Examples:
-1. Input Query: "Can you tell me the status of case ID 12345 and project ID 67890?"
-   Rewritten Query: "What is the current status of case 12345 and project 67890?"
+Open Terminal.
+Run the following command to install Homebrew:
+bash
+Copy
+Edit
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+Verify the installation by running:
+bash
+Copy
+Edit
+brew --version
+Step 2: Install Tesseract
+Once Homebrew is installed, you can use it to install Tesseract OCR.
 
-2. Input Query: "I need the review date for business case 98765 and order ID 43210."
-   Rewritten Query: "What is the review date for business case 98765 and order 43210?"
+In Terminal, run the following command:
+bash
+Copy
+Edit
+brew install tesseract
+Verify the installation:
+bash
+Copy
+Edit
+tesseract --version
+You should see the Tesseract version and some additional details.
+Step 3: Install Language Data (Optional)
+Tesseract supports multiple languages. By default, it includes English, but you can install additional languages.
 
-3. Input Query: "Find the approval status for case number 11111 and item ID 22222."
-   Rewritten Query: "What is the approval status of case 11111 and item 22222?"
+To install additional languages, run:
+bash
+Copy
+Edit
+brew install tesseract-lang
+You can find installed language files in:
+bash
+Copy
+Edit
+/usr/local/share/tessdata
+Step 4: Test Tesseract Installation
+Create an image file with some text (e.g., sample.png) and save it to a known location.
+Use Tesseract to extract text from the image:
+bash
+Copy
+Edit
+tesseract /path/to/sample.png output
+This command will generate a file called output.txt in the same directory with the extracted text.
+Step 5: Install Tesseract Python Bindings (Optional)
+If you plan to use Tesseract with Python, install the pytesseract package.
 
-### Instructions:
-- Rewrite the user query to be concise, clear, and in the same format as the examples.
-- Preserve the intent and information from the input query.
-- Always start the rewritten query with a "What is" or "What are" question, as appropriate.
-- Do not omit any IDs or key details from the input query.
+Ensure you have Python and pip installed. Install pytesseract using pip:
+bash
+Copy
+Edit
+pip install pytesseract
+In your Python script, you can now use Tesseract:
+python
+Copy
+Edit
+from pytesseract import pytesseract
 
-### User Query:
-"{user_query}"
+# Set the Tesseract executable path
+pytesseract.tesseract_cmd = '/usr/local/bin/tesseract'
 
-### Rewritten Query:
+# Extract text from an image
+text = pytesseract.image_to_string('/path/to/sample.png')
+print(text)
+Step 6: Update or Uninstall Tesseract (Optional)
+Update Tesseract:
+bash
+Copy
+Edit
+brew update
+brew upgrade tesseract
+Uninstall Tesseract:
+bash
+Copy
+Edit
+brew uninstall tesseract
+Tips for Tesseract Usage
+For better OCR accuracy, preprocess the image (e.g., convert it to grayscale, increase contrast).
+Use the --dpi, -c, or --psm flags for advanced configurations:
+bash
+Copy
+Edit
+tesseract /path/to/sample.png output --dpi 300
