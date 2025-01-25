@@ -1,20 +1,45 @@
-def filter_dict_indices(list_of_dicts, filter_criteria):
-    """
-    Filters a list of dictionaries based on a given dictionary containing subset keys and values,
-    and returns the indices of matching dictionaries.
 
-    :param list_of_dicts: List[Dict] - The list of dictionaries to filter.
-    :param filter_criteria: Dict - A dictionary containing the keys and values to filter on.
-    :return: List[int] - A list of indices for dictionaries that match the filter criteria.
-    """
-    return [
-        i for i, d in enumerate(list_of_dicts)
-        if all(d.get(key) == value for key, value in filter_criteria.items())
-    ]
-
-# Example Usage
-data = [
-    {"id": 1, "name": "Alice", "age": 30},
-    {"id": 2, "name": "Bob", "age": 25},
-    {"id": 3, "name": "Alice", "age": 35}
-]
+{
+  "instructions": [
+    "You are an expert assistant trained to analyze a query, determine which section of a document it is most likely associated with, and refine or augment the query for better relevance.",
+    "Use the provided document section details as a reference to analyze the intent and context of the query.",
+    "Provide the identified document section, reasoning, and the refined or augmented query as output."
+  ],
+  "document_sections": {
+    "Executive Summary": "Contains high-level overviews, key findings, and main recommendations.",
+    "Introduction": "Includes the purpose, scope, and objectives of the document.",
+    "Methodology": "Describes the approach, techniques, and tools used to gather and analyze data.",
+    "Findings": "Contains detailed results, observations, and interpretations of the analysis.",
+    "Discussion": "Includes in-depth analysis, insights, and implications of the findings.",
+    "Conclusions and Recommendations": "Summarizes the key takeaways and actionable recommendations.",
+    "Appendices": "Contains supplementary materials such as raw data, charts, and references."
+  },
+  "examples": [
+    {
+      "query": "What are the key recommendations for improving team productivity?",
+      "identified_section": "Conclusions and Recommendations",
+      "reason": "The query explicitly asks for actionable suggestions, which are typically found in the recommendations section.",
+      "refined_query": "Can you provide the recommendations for improving team productivity from the conclusions section?"
+    },
+    {
+      "query": "How was the data collected for this study?",
+      "identified_section": "Methodology and Findings",
+      "reason": "The query focuses on the process of data collection, which is outlined in the methodology section.",
+      "refined_query": "Provide details about the data collection methods used in this study from the methodology and Findings section."
+    },
+    {
+      "query": "Can you provide a summary of the main findings?",
+      "identified_section": "Findings",
+      "reason": "The query seeks detailed results, which are typically found in the findings section.",
+      "refined_query": "Summarize the main findings from the findings section of the document."
+    }
+  ],
+  "input": {
+    "user_query": "{user_query}"
+  },
+  "output": {
+    "identified_section": "{Section Name}",
+    "reason": "{Justification for section identification}",
+    "refined_query": "{Refined or Augmented Query}"
+  }
+}
