@@ -1,46 +1,45 @@
-import fitz  # PyMuPDF
+from pdf2image import convert_from_path
+import pytesseract
+from PIL import Image, ImageDraw
 
-def extract_word_styling(pdf_path):
+def extract_word_colors(pdf_path):
     try:
-        word_styling = []
+        # Convert PDF to images (one image per page)
+        images = convert_from_path(pdf_path)
+        results = []
 
-        # Open the PDF
-        doc = fitz.open(pdf_path)
+        for page_num, image in enumerate(images, start=1):
+            # Use Tesseract to extract words with bounding boxes
+            data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
 
-        for page_num in range(len(doc)):
-            page = doc[page_num]
-            blocks = page.get_text("dict")["blocks"]  # Extract text blocks as dictionary
+            for i in range(len(data["text"])):
+                word = data["text"][i].strip()
+                if word:  # Only process non-empty words
+                    # Extract word position
+                    x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
+                    
+                    # Extract the word region from the image
+                    word_region = image.crop((x, y, x + w, y + h))
+                    
+                    # Get the average color of the word region
+                    avg_color = word_region.resize((1, 1)).getpixel((0, 0))  # Downscale to 1x1 pixel for average color
+                    
+                    results.append({
+                        "page": page_num,
+                        "text": word,
+                        "font_color": avg_color  # RGB color of the word
+                    })
 
-            for block in blocks:
-                for line in block.get("lines", []):
-                    for span in line.get("spans", []):
-                        # Split spans into words to analyze styling word by word
-                        words = span["text"].split()
-                        for word in words:
-                            # Convert color integer to an RGB tuple
-                            color_rgb = fitz.colorspace_to_rgb(span.get("color"))
-                            word_data = {
-                                "page": page_num + 1,
-                                "text": word,
-                                "font": span.get("font"),  # Font name
-                                "font_size": span.get("size"),  # Font size
-                                "font_color": color_rgb,  # Font color as an RGB tuple
-                                "background_color": None,  # Background colors are not directly supported
-                                "alignment": block.get("type", "unknown"),  # Block alignment
-                                "bounding_box": span.get("bbox"),  # Bounding box for word
-                            }
-                            word_styling.append(word_data)
-
-        return word_styling
+        return results
 
     except Exception as e:
-        print(f"Error while extracting word styling: {e}")
+        print(f"Error extracting word colors: {e}")
         return []
 
 # Example Usage
-pdf_file_path = "example.pdf"
-styling_data = extract_word_styling(pdf_file_path)
+pdf_file_path = "example.pdf"  # Replace with your PDF file path
+word_color_data = extract_word_colors(pdf_file_path)
 
 # Display results
-for item in styling_data[:10]:  # Show first 10 results
+for item in word_color_data[:10]:  # Display the first 10 words with colors
     print(item)
