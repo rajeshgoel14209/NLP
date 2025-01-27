@@ -1,49 +1,44 @@
-import pdfplumber
+import fitz  # PyMuPDF
 
-def extract_word_background_color(pdf_path):
+def extract_word_styling(pdf_path):
     try:
-        word_background_details = []
+        word_styling = []
 
         # Open the PDF
-        with pdfplumber.open(pdf_path) as pdf:
-            for page_num, page in enumerate(pdf.pages):
-                words = page.extract_words()
-                rectangles = page.rects  # Graphical elements like filled rectangles
+        doc = fitz.open(pdf_path)
 
-                for word in words:
-                    word_box = {
-                        "x0": word["x0"],
-                        "y0": word["top"],
-                        "x1": word["x1"],
-                        "y1": word["bottom"],
-                    }
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            blocks = page.get_text("dict")["blocks"]  # Extract text blocks as dictionary
 
-                    # Check for rectangles overlapping with the word's bounding box
-                    background_color = None
-                    for rect in rectangles:
-                        if (
-                            rect["x0"] <= word_box["x0"] <= rect["x1"]
-                            and rect["y0"] <= word_box["y0"] <= rect["y1"]
-                        ):
-                            background_color = rect.get("non_stroking_color")  # Background color
+            for block in blocks:
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        # Split spans into words to analyze styling word by word
+                        words = span["text"].split()
+                        for word in words:
+                            word_data = {
+                                "page": page_num + 1,
+                                "text": word,
+                                "font": span.get("font"),  # Font name
+                                "font_size": span.get("size"),  # Font size
+                                "font_color": fitz.get_color_string(span.get("color")),  # Font color in RGB
+                                "background_color": None,  # Background colors are not directly supported
+                                "alignment": block.get("type", "unknown"),  # Block alignment
+                                "bounding_box": span.get("bbox"),  # Bounding box for word
+                            }
+                            word_styling.append(word_data)
 
-                    word_background_details.append({
-                        "page": page_num + 1,
-                        "text": word["text"],
-                        "bounding_box": word_box,
-                        "background_color": background_color,
-                    })
-
-        return word_background_details
+        return word_styling
 
     except Exception as e:
-        print(f"Error while extracting word background color: {e}")
+        print(f"Error while extracting word styling: {e}")
         return []
 
 # Example Usage
 pdf_file_path = "example.pdf"
-background_data = extract_word_background_color(pdf_file_path)
+styling_data = extract_word_styling(pdf_file_path)
 
 # Display results
-for item in background_data[:10]:
+for item in styling_data[:10]:  # Show first 10 results
     print(item)
