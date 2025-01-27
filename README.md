@@ -17,12 +17,14 @@ def extract_word_styling(pdf_path):
                         # Split spans into words to analyze styling word by word
                         words = span["text"].split()
                         for word in words:
+                            # Convert color integer to an RGB tuple
+                            color_rgb = fitz.colorspace_to_rgb(span.get("color"))
                             word_data = {
                                 "page": page_num + 1,
                                 "text": word,
                                 "font": span.get("font"),  # Font name
                                 "font_size": span.get("size"),  # Font size
-                                "font_color": fitz.get_color_string(span.get("color")),  # Font color in RGB
+                                "font_color": color_rgb,  # Font color as an RGB tuple
                                 "background_color": None,  # Background colors are not directly supported
                                 "alignment": block.get("type", "unknown"),  # Block alignment
                                 "bounding_box": span.get("bbox"),  # Bounding box for word
