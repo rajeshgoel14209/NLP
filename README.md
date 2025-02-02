@@ -1,5 +1,5 @@
 pip install tabula-py pdf2image pytesseract opencv-python
-
+pattern = r"\b(cover\s*page|executive\s*summary|sources?\s*of\s*repayment|financial\s*analysis|exposure\s*analysis|appendix)\b"
 import cv2
 import pytesseract
 from pdf2image import convert_from_path
