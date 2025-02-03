@@ -236,4 +236,27 @@ results = vectorstore.search_by_vector(query_embedding[0], k=2)
 # Print results
 for doc in results:
     print("Similar text:", doc.page_content)
+
+
+# Load a vocabulary of words and their embeddings (e.g., from Word2Vec or GloVe)
+word_vectors = {
+    "AI": model.encode(["AI"])[0],
+    "machine": model.encode(["machine"])[0],
+    "learning": model.encode(["learning"])[0],
+    "intelligence": model.encode(["intelligence"])[0],
+    "cars": model.encode(["cars"])[0],
+    "navigation": model.encode(["navigation"])[0]
+}
+
+# Convert word vectors to a matrix
+word_list = list(word_vectors.keys())
+word_embeddings = np.array([word_vectors[word] for word in word_list])
+
+# Find the closest words using cosine similarity
+similarities = cosine_similarity(avg_embedding, word_embeddings)[0]
+top_indices = similarities.argsort()[-5:][::-1]  # Top 5 similar words
+
+# Reconstructed text (approximation)
+reconstructed_text = " ".join([word_list[i] for i in top_indices])
+print("Reconstructed Text (Approximation):", reconstructed_text)
     
