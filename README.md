@@ -168,4 +168,72 @@ text = pytesseract.image_to_string(gray, config=custom_config)
 # Print raw extracted text
 print("Extracted Text:\n", text)
 
+
+
+
+
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+# Load SentenceTransformer model
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Sample texts
+texts = [
+    "This is a sample sentence.",
+    "Another example text.",
+    "AI is transforming the world.",
+    "Machine learning is powerful."
+]
+
+# Generate embeddings using model.encode()
+embeddings = model.encode(texts).astype('float32')
+
+
+
+
+from langchain.vectorstores import FAISS
+from langchain.schema import Document
+import faiss
+import pickle
+
+# Create FAISS index
+dimension = embeddings.shape[1]
+index = faiss.IndexFlatL2(dimension)
+index.add(embeddings)  # Add embeddings to FAISS
+
+# Store metadata separately (text content)
+documents = [Document(page_content=text) for text in texts]
+
+# Save FAISS index
+faiss.write_index(index, "faiss_vectorstore.index")
+
+# Save metadata (texts)
+with open("faiss_metadata.pkl", "wb") as f:
+    pickle.dump(documents, f)
+
+
+    # Load FAISS index
+index = faiss.read_index("faiss_vectorstore.index")
+
+# Load metadata
+with open("faiss_metadata.pkl", "rb") as f:
+    documents = pickle.load(f)
+
+# Create FAISS vector store using LangChain
+vectorstore = FAISS(index, documents)
+
+
+# Query text
+query_text = "AI is changing technology."
+
+# Generate query embedding
+query_embedding = model.encode([query_text]).astype('float32')
+
+# Perform search
+results = vectorstore.search_by_vector(query_embedding[0], k=2)
+
+# Print results
+for doc in results:
+    print("Similar text:", doc.page_content)
     
