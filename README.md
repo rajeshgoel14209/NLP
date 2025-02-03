@@ -57,6 +57,112 @@ gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 # Apply OCR
 custom_config = r"--oem 3 --psm 6"
+
+
+
+
+
+Drawbacks of Mean Pooling for Chunked Embeddings
+1. Loss of Important Information (Averaging Weakens Signal)
+Mean pooling treats all words equally, so important words lose impact.
+If a document contains a key idea in one chunk, averaging dilutes its influence.
+2. Contextual Blurring (Mixing Multiple Meanings)
+Different parts of a long document may have different meanings.
+Averaging blends unrelated information into one representation.
+3. Inability to Prioritize Important Chunks
+Some chunks may be more relevant than others, but mean pooling gives equal weight to all chunks.
+
+
+
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+# Load embedding model
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Example long text split into 3 chunks
+chunks = [
+    "Artificial intelligence is transforming industries by automating tasks.",
+    "Self-driving cars use AI to navigate roads without human intervention.",
+    "Deep learning models, like neural networks, are trained on massive datasets."
+]
+
+# Generate embeddings for each chunk
+embeddings = model.encode(chunks)
+
+# Display individual chunk embeddings (truncated)
+for i, emb in enumerate(embeddings):
+    print(f"Chunk {i+1} embedding (truncated):", emb[:5])  # Showing first 5 values only
+
+# Apply Mean Pooling
+mean_embedding = np.mean(embeddings, axis=0)
+
+print("\nMean Pooled Embedding (truncated):", mean_embedding[:5])  # Truncated output
+
+
+Chunk 1: [0.12, 0.34, 0.56, 0.78, 0.90, ...]
+Chunk 2: [0.23, 0.45, 0.67, 0.89, 0.12, ...]
+Chunk 3: [0.31, 0.51, 0.72, 0.93, 0.14, ...]
+
+If Chunk 2 strongly represents "self-driving cars" and Chunk 3 represents "deep learning," the mean pooling result will blend these instead of keeping them distinct.
+
+Before Mean Pooling
+Chunk 1 (AI industry) → [0.12, 0.34, 0.56, 0.78, 0.90]
+Chunk 2 (Self-driving cars) → [0.23, 0.45, 0.67, 0.89, 0.12]
+Chunk 3 (Deep learning) → [0.31, 0.51, 0.72, 0.93, 0.14]
+
+Mean Pooled: [0.22, 0.43, 0.65, 0.86, 0.38]
+
+The sharp differences between "self-driving cars" and "deep learning" vanish.
+The final embedding is less specific to any one concept.
+
+Alternatives to Mean Pooling
+✅ Max Pooling → Takes the strongest signals from each chunk.
+✅ Weighted Mean Pooling → Gives more importance to key chunks.
+✅ CLS Token Pooling → Uses the [CLS] token, which captures contextual meaning better.
+✅ Hierarchical Embedding → Uses a separate transformer to combine chunk embeddings
+
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+# Load embedding model
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Example long text split into 3 chunks
+chunks = [
+    "Artificial intelligence is transforming industries by automating tasks.",
+    "Self-driving cars use AI to navigate roads without human intervention.",
+    "Deep learning models, like neural networks, are trained on massive datasets."
+]
+
+# Generate embeddings for each chunk
+embeddings = model.encode(chunks)
+
+Step 3: Define Weights for Each Chunk
+Weights can be assigned based on:
+✅ Sentence Importance (e.g., TF-IDF score, attention score).
+✅ Position in Text (e.g., intro & conclusion get higher weights).
+✅ Predefined Importance Scores (e.g., domain knowledge).
+
+
+# Example weights: First chunk is more important (higher weight)
+weights = np.array([0.5, 0.3, 0.2])
+weights = weights / np.sum(weights)  # Normalize to sum to 1
+
+Step 4: Apply Weighted Pooling
+Instead of a simple mean, multiply each embedding by its weight before summing.
+
+python
+Copy
+Edit
+# Apply weighted pooling
+weighted_embedding = np.sum(embeddings * weights[:, np.newaxis], axis=0)
+
+# Print first 5 values of the final pooled embedding
+print("Weighted Pooled Embedding (truncated):", weighted_embedding[:5])
+
+
+
 text = pytesseract.image_to_string(gray, config=custom_config)
 
 # Print raw extracted text
