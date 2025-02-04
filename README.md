@@ -4,44 +4,39 @@ https://towardsdatascience.com/5-proven-query-translation-techniques-to-boost-yo
 
 https://blog.stackademic.com/late-chunking-embedding-first-chunk-later-long-context-retrieval-in-rag-applications-3a292f6443bb
 
-import numpy as np
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
 
-def weighted_mean_pooling(embeddings: list, weighting_strategy="equal"):
-    """
-    Apply weighted mean pooling on a variable-length list of embeddings.
+# Load pre-trained model and tokenizer (you can use any transformer-based model for Cross-Encoder)
+model_name = "sentence-transformers/msmarco-distilbert-base-v3"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
-    :param embeddings: List of numpy arrays (each embedding must have the same dimension)
-    :param weighting_strategy: Strategy to generate weights dynamically
-    :return: Weighted mean pooled embedding (numpy array)
-    """
-    num_embeddings = len(embeddings)
-    embeddings = np.array(embeddings)  # Convert list to numpy array
+# Query embedding and document embeddings
+query_embedding = "your_query_embedding_here"  # Replace with your actual query embedding
+document_embeddings = ["doc1", "doc2", "doc3"]  # List of document texts
 
-    # Generate dynamic weights
-    if weighting_strategy == "equal":
-        weights = np.ones(num_embeddings) / num_embeddings  # Equal distribution
-    elif weighting_strategy == "linear_decay":
-        weights = np.linspace(1, 0.5, num_embeddings)  # Linearly decreasing weights
-    elif weighting_strategy == "exponential_decay":
-        weights = np.exp(-np.arange(num_embeddings))  # Exponentially decreasing weights
-    else:
-        raise ValueError("Unknown weighting strategy")
+# Tokenizing the query and document pairs
+def prepare_input(query, doc):
+    # Create pairs of query and document as input for the Cross-Encoder
+    inputs = tokenizer(query, doc, return_tensors='pt', padding=True, truncation=True)
+    return inputs
 
-    weights = weights.reshape(-1, 1)  # Reshape for broadcasting
+# Evaluate the relevance of each document to the query
+def get_relevance_scores(query, documents):
+    scores = []
+    for doc in documents:
+        inputs = prepare_input(query, doc)
+        with torch.no_grad():
+            output = model(**inputs)
+        score = output.logits.squeeze().item()  # Assuming logits represent relevance score
+        scores.append(score)
+    return scores
 
-    # Compute weighted sum
-    weighted_sum = np.sum(embeddings * weights, axis=0)
-
-    # Normalize by total weight
-    weighted_mean = weighted_sum / np.sum(weights)
-
-    return weighted_mean
-
-# Example: Variable number of embeddings
-embeddings_list = [
-    np.array([0.1, 0.3, 0.5, 0.7, 0.2]),
-    np.array([0.4, 0.2, 0.6, 0.5, 0.9]),
-    np.array([0.2, 0.7, 0.3, 0.9, 0.4])
+# Example usage
+query = "What is the capital of France?"
+relevance_scores = get_relevance_scores(query, document_embeddings)
+print(relevance_scores)
 ]
 
 # Apply weighted mean pooling with equal weights
