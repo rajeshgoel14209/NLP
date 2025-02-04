@@ -6,12 +6,15 @@ https://blog.stackademic.com/late-chunking-embedding-first-chunk-later-long-cont
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-from vllm import LLM, SamplingParams
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 app = FastAPI()
 
-# Load Mistral model on GPU
-llm = LLM(model="mistralai/Mistral-7B-Instruct")
+# Load Mistral model and tokenizer
+model_name = "mistralai/Mistral-7B-Instruct"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
 
 class ChatRequest(BaseModel):
     prompt: str
@@ -20,12 +23,17 @@ class ChatRequest(BaseModel):
 
 @app.post("/v1/chat/completions")
 async def chat(request: ChatRequest):
-    sampling_params = SamplingParams(
-        max_tokens=request.max_tokens, temperature=request.temperature
+    inputs = tokenizer(request.prompt, return_tensors="pt").to("cuda")
+    output = model.generate(
+        **inputs, 
+        max_new_tokens=request.max_tokens, 
+        temperature=request.temperature
     )
-    output = llm.generate(request.prompt, sampling_params)
+    response_text = tokenizer.decode(output[0], skip_special_tokens=True)
     
-    return {"response": output[0].outputs[0].text}
+    return {"response": response_text}
+
+    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
     
 
