@@ -47,3 +47,16 @@ llm = ChatOpenAI(
 
 response = llm.invoke("What is RAG?")
 print(response)
+
+
+from langchain.vectorstores import FAISS
+from langchain.embeddings import OpenAIEmbeddings
+
+vectorstore = FAISS.load_local("faiss_index", OpenAIEmbeddings(openai_api_base="http://your-server-ip:8000/v1"))
+
+retriever = vectorstore.as_retriever()
+retrieved_docs = retriever.get_relevant_documents("Explain credit review process")
+llm_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
+
+response = llm_chain.run("Summarize credit review documents")
+print(response)
