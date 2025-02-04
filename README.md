@@ -1,3 +1,5 @@
+https://ai.plainenglish.io/table-extraction-using-llms-unlocking-structured-data-from-documents-50cf21c98509
+
 import requests
 
 def check_entitlement(soeid):
