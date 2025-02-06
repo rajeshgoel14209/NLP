@@ -1,63 +1,58 @@
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-from langchain.llms import HuggingFacePipeline
-from langchain.agents import Tool, ZeroShotAgent, AgentExecutor
+system_prompt = """
+You are an AI agent that follows a strict format. After providing a "Thought", you must always take an "Action".
+Respond only in JSON format like this:
 
-# Load the Mistral7B model from Hugging Face
-model_id = "mistralai/Mistral-7B-Instruct-v0.1"  # Replace with your Mistral7B model if needed
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(
-    model_id,
-    torch_dtype=torch.float16,
-    device_map="auto"  # This uses available GPUs; adjust if needed
+{
+  "thought": "I need to search for the latest AI trends.",
+  "action": "search",
+  "parameters": {"query": "latest AI trends"}
+}
+
+Do not add any explanations or extra text. Just return valid JSON.
+"""
+
+
+import json
+import re
+
+def extract_json(text):
+    match = re.search(r'\{.*\}', text, re.DOTALL)
+    return json.loads(match.group()) if match else None
+
+llm_response = 'Thought: I should look up AI news.\n```json\n{"action": "search", "parameters": {"query": "AI news"}}\n```'
+parsed_output = extract_json(llm_response)
+print(parsed_output)  # Should return a dictionary
+
+
+from langchain.chat_models import ChatOpenAI
+from langchain.agents import initialize_agent, AgentType
+from langchain.tools import Tool
+
+# Define a sample tool
+def search_tool(query: str):
+    return f"Searching for {query}..."
+
+search = Tool(name="search", func=search_tool, description="Searches for information online.")
+
+# Initialize Mistral with function calling
+llm = ChatOpenAI(model="mistral", openai_api_key="YOUR_API_KEY")
+
+agent = initialize_agent(
+    tools=[search],
+    llm=llm,
+    agent=AgentType.OPENAI_FUNCTIONS,  # Forces function calling behavior
+    verbose=True,
 )
 
-# Create a text-generation pipeline for the model
-pipe = pipeline(
-    "text-generation",
-    model=model,
-    tokenizer=tokenizer,
-    max_length=512,
-    do_sample=True,
-    temperature=0.7,
+agent_executor = initialize_agent(
+    tools=[search],
+    llm=llm,
+    agent=AgentType.OPENAI_FUNCTIONS,
+    verbose=True  # Enables debugging output
 )
 
-# Wrap the pipeline with LangChain's HuggingFacePipeline LLM
-llm = HuggingFacePipeline(pipeline=pipe)
+agent_executor.run("Find the latest AI trends.")
 
-# Define some example tools for the agent to use
-tools = [
-    Tool(
-        name="Calculator",
-        func=lambda x: str(eval(x)),  # simple calculator function; use with caution!
-        description="Useful for performing arithmetic calculations."
-    ),
-    Tool(
-        name="Search",
-        func=lambda query: f"Simulated search results for query: '{query}'",
-        description="Useful for searching for information."
-    ),
-]
 
-# Define prompt prefixes and suffixes to guide the agent's behavior
-prefix = (
-    "You are an AI assistant that can answer questions and use tools if needed. "
-    "When appropriate, decide to use one of the available tools to assist with your answer."
-)
-suffix = (
-    "If you decide a tool is needed, make sure to call it appropriately. "
-    "Otherwise, provide a direct answer to the question."
-)
 
-# Initialize the ZeroShotAgent with the Mistral LLM and the tools
-agent = ZeroShotAgent(llm=llm, tools=tools, prefix=prefix, suffix=suffix)
-
-# Create an AgentExecutor that ties the agent and tools together, with verbose logging
-agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, verbose=True)
-
-# Run a test query through the agent
-query = "What is the result of 15 + 20, and can you search for the latest news on AI?"
-result = agent_executor.run(query)
-
-print("Agent Response:")
-print(result)
+agent.run("Find the latest AI research.")
