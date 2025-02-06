@@ -1,84 +1,73 @@
-from langchain.agents import ZeroShotAgent
-from langchain.prompts import PromptTemplate
+from langchain.chat_models import ChatOpenAI
 
-custom_prompt_with_history = PromptTemplate(
-    template="""
-You are an AI agent that assists users by reasoning step by step and using tools when necessary.
-
-## Chat History:
-{chat_history}
-
-## Instructions:
-- Think before you act.
-- Use tools only when necessary.
-- Respond using the structured format:
-
-### Example:
-Thought: "I need to search for AI research."
-Action: search[{"query": "latest AI research"}]
-Observation: "AI research articles found."
-Final Answer: "Here are the latest AI research articles: ..."
-
-## Available Tools:
-{tools}
-
-## Current Question:
-{input}
-{agent_scratchpad}
-""",
-    input_variables=["tools", "input", "agent_scratchpad", "chat_history"],
+llm = ChatOpenAI(
+    base_url="http://your-gpu-server:8000/v1",
+    model="mistral",
+    temperature=0
 )
 
 
-from collections import deque
-
-class ChatMemory:
-    def __init__(self, max_length=5):
-        self.memory = deque(maxlen=max_length)
-
-    def add_interaction(self, user_input, agent_response):
-        self.memory.append(f"User: {user_input}\nAI: {agent_response}")
-
-    def get_history(self):
-        return "\n".join(self.memory)
-
-
-  from langchain.chat_models import ChatOpenAI
-from langchain.agents import initialize_agent, AgentType
 from langchain.tools import Tool
+from langchain.utilities import WikipediaAPIWrapper
 
-# Initialize chat memory
-chat_memory = ChatMemory(max_length=5)
+wiki = WikipediaAPIWrapper()
+wiki_tool = Tool(
+    name="WikipediaSearch",
+    func=wiki.run,
+    description="Search Wikipedia for general knowledge queries."
+)
+tools = [wiki_tool]
 
-# Sample tool
-def search_tool(query: str):
-    return f"Searching for: {query}..."
 
-search = Tool(name="search", func=search_tool, description="Searches for online information.")
+from langchain.agents import AgentExecutor, LLMSingleActionAgent
+from langchain.agents.agent import AgentOutputParser
+from langchain.schema import AgentAction, AgentFinish
+from langchain.prompts import PromptTemplate
+from langchain.memory import ConversationBufferMemory
+import re
 
-# Load Mistral LLM
-llm = ChatOpenAI(model="mistral", openai_api_key="YOUR_API_KEY")
+# Custom Prompt
+prompt_template = """You are a helpful AI agent. Given the input question, you must determine the best action using the available tools.
 
-# Run a conversation loop
-while True:
-    user_input = input("User: ")
-    
-    # Inject chat history into the agent prompt
-    chat_history = chat_memory.get_history()
-    
-    # Initialize agent with custom prompt including chat history
-    agent = initialize_agent(
-        tools=[search],
-        llm=llm,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        agent_kwargs={"prompt": custom_prompt_with_history},
-        verbose=True,
-    )
+Question: {input}
+Thought: {agent_scratchpad}
+"""
 
-    # Run the agent
-    response = agent.run(user_input)
+prompt = PromptTemplate(
+    template=prompt_template, input_variables=["input", "agent_scratchpad"]
+)
 
-    # Store interaction in chat memory
-    chat_memory.add_interaction(user_input, response)
+# Custom Output Parser
+class CustomOutputParser(AgentOutputParser):
+    def parse(self, text: str):
+        match = re.search(r"Action: (.+?)\nAction Input: (.+)", text, re.DOTALL)
+        if match:
+            return AgentAction(tool=match.group(1), tool_input=match.group(2), log=text)
+        else:
+            return AgentFinish(return_values={"output": text}, log=text)
 
-    print(f"AI: {response}")      
+output_parser = CustomOutputParser()
+
+# Custom Agent
+class CustomAgent(LLMSingleActionAgent):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+agent = CustomAgent(
+    llm_chain=llm,
+    output_parser=output_parser,
+    stop_sequence=["\n"],
+)
+
+# Agent Executor
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    verbose=True
+)
+
+
+response = agent_executor.run("Who is Albert Einstein?")
+print(response)
+
+
