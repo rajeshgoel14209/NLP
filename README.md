@@ -56,3 +56,18 @@ agent_executor.run("Find the latest AI trends.")
 
 
 agent.run("Find the latest AI research.")
+
+
+
+
+system_prompt = """
+You must always respond in a structured JSON format like this:
+
+{
+  "thought": "I need to search for AI trends.",
+  "action": "search",
+  "parameters": {"query": "AI trends"}
+}
+
+No additional text or explanations.
+"""
