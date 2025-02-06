@@ -1,3 +1,5 @@
+https://www.kaggle.com/datasets/gazal5277/e-commerce-product-and-customer-dataset?phase=FinishSSORegistration&returnUrl=/datasets/gazal5277/e-commerce-product-and-customer-dataset/versions/1?resource=download&SSORegistrationToken=CfDJ8PHSCL9k9s1HuJ2cRFBFhuj7jj2GrKbxP6UAmI61_-zw4tdXmuoUsxSLqImfSrYJgsHl6_EmqAEAV2q4ZOiuVq9-HPRZJzSCT4qJOTfwEQPwOsxoRZT8wqxWBGlNZT50mexINu0CX5TuQU2IyBSoNp6bW80UmWoTNhq77BPe3CWQTWaOw3Ykpqe8CHkUAJ-p3kx9HlaBmk_Io0t5Bc0rfmBo8_UtvJp180-7eYKdVFcCGRMiYSuXRyYLHaWetgiEKp81MYz6s-txUQWJ-qUC5sVYqKWrU3ZyEIC0NRR_YHUIfEXvN99siGdam9QFTKldkid1rqe9FU5X1HwZT1mKXZSXKqV6sg&DisplayName=Rajesh%20Goel
+
 from langchain.chat_models import ChatOpenAI
 
 llm = ChatOpenAI(
