@@ -1,73 +1,96 @@
-system_prompt = """
-You are an AI agent that follows a strict format. After providing a "Thought", you must always take an "Action".
-Respond only in JSON format like this:
+from langchain.agents import ZeroShotAgent
+from langchain.prompts import PromptTemplate
 
-{
-  "thought": "I need to search for the latest AI trends.",
-  "action": "search",
-  "parameters": {"query": "latest AI trends"}
-}
+# Custom Prompt
+custom_prompt = PromptTemplate(
+    template="""
+You are an AI agent helping with tasks using available tools. Follow this process strictly:
 
-Do not add any explanations or extra text. Just return valid JSON.
-"""
+1. Think about the best next step. Write this as:
+   Thought: "..."
+   
+2. Decide which tool to use. Respond with:
+   Action: tool_name[parameters]
+   
+3. Observe the tool's response.
+   
+4. If needed, repeat the process. Otherwise, provide:
+   Final Answer: "..."
 
+Here are the available tools:
+{tools}
 
-import json
-import re
+You must strictly follow this format.
 
-def extract_json(text):
-    match = re.search(r'\{.*\}', text, re.DOTALL)
-    return json.loads(match.group()) if match else None
+Begin!
 
-llm_response = 'Thought: I should look up AI news.\n```json\n{"action": "search", "parameters": {"query": "AI news"}}\n```'
-parsed_output = extract_json(llm_response)
-print(parsed_output)  # Should return a dictionary
+Question: {input}
+{agent_scratchpad}
+""",
+    input_variables=["tools", "input", "agent_scratchpad"],
+)
 
 
 from langchain.chat_models import ChatOpenAI
 from langchain.agents import initialize_agent, AgentType
 from langchain.tools import Tool
 
-# Define a sample tool
+# Sample tool
 def search_tool(query: str):
-    return f"Searching for {query}..."
+    return f"Searching for: {query}..."
 
-search = Tool(name="search", func=search_tool, description="Searches for information online.")
+search = Tool(name="search", func=search_tool, description="Searches for online information.")
 
-# Initialize Mistral with function calling
+# Load Mistral LLM
 llm = ChatOpenAI(model="mistral", openai_api_key="YOUR_API_KEY")
 
+# Create Zero-Shot ReAct agent with custom prompt
 agent = initialize_agent(
     tools=[search],
     llm=llm,
-    agent=AgentType.OPENAI_FUNCTIONS,  # Forces function calling behavior
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    agent_kwargs={"prompt": custom_prompt},  # Custom prompt applied here
     verbose=True,
 )
 
-agent_executor = initialize_agent(
-    tools=[search],
-    llm=llm,
-    agent=AgentType.OPENAI_FUNCTIONS,
-    verbose=True  # Enables debugging output
-)
-
-agent_executor.run("Find the latest AI trends.")
-
-
-
+# Run agent
 agent.run("Find the latest AI research.")
 
-
-
-
-system_prompt = """
-You must always respond in a structured JSON format like this:
+custom_prompt_json = PromptTemplate(
+    template="""
+You are an AI assistant. Always respond in valid JSON format:
 
 {
-  "thought": "I need to search for AI trends.",
-  "action": "search",
-  "parameters": {"query": "AI trends"}
+  "thought": "Analyze the input...",
+  "action": "tool_name",
+  "parameters": {"query": "search term"}
 }
 
-No additional text or explanations.
-"""
+Here are the available tools:
+{tools}
+
+Question: {input}
+{agent_scratchpad}
+""",
+    input_variables=["tools", "input", "agent_scratchpad"],
+)
+
+custom_prompt_no_hallucination = PromptTemplate(
+    template="""
+You are an AI assistant with access to the following tools:
+
+{tools}
+
+Always respond in this format:
+1. Thought: "..."
+2. Action: Choose one of the above tools.
+3. Parameters: Provide the correct parameters.
+
+If you don’t know the answer, respond:
+Final Answer: "I cannot complete this request."
+
+Question: {input}
+{agent_scratchpad}
+""",
+    input_variables=["tools", "input", "agent_scratchpad"],
+)
