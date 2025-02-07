@@ -1,3 +1,36 @@
+# Initialize ChromaDB client
+client = chromadb.PersistentClient(path="./chroma_db")
+collection = client.get_or_create_collection(name="my_collection")
+
+# Initialize embedding model
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Data to add
+documents = ["This is document one.", "This is document two."]
+metadata_list = [{"source": "doc1", "category": "news"}, {"source": "doc2", "category": "sports"}]
+
+# Generate embeddings
+embeddings = [model.encode(text).tolist() for text in documents]
+
+# Add to ChromaDB
+collection.add(
+    ids=["1", "2"],
+    embeddings=embeddings,
+    documents=documents,
+    metadatas=metadata_list
+)
+
+
+
+
+
+
+
+
+
+
+
+
 import chromadb
 from sentence_transformers import SentenceTransformer
 from chromadb.utils.errors import ChromaError
