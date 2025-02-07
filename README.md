@@ -1,75 +1,70 @@
-https://www.kaggle.com/datasets/gazal5277/e-commerce-product-and-customer-dataset?phase=FinishSSORegistration&returnUrl=/datasets/gazal5277/e-commerce-product-and-customer-dataset/versions/1?resource=download&SSORegistrationToken=CfDJ8PHSCL9k9s1HuJ2cRFBFhuj7jj2GrKbxP6UAmI61_-zw4tdXmuoUsxSLqImfSrYJgsHl6_EmqAEAV2q4ZOiuVq9-HPRZJzSCT4qJOTfwEQPwOsxoRZT8wqxWBGlNZT50mexINu0CX5TuQU2IyBSoNp6bW80UmWoTNhq77BPe3CWQTWaOw3Ykpqe8CHkUAJ-p3kx9HlaBmk_Io0t5Bc0rfmBo8_UtvJp180-7eYKdVFcCGRMiYSuXRyYLHaWetgiEKp81MYz6s-txUQWJ-qUC5sVYqKWrU3ZyEIC0NRR_YHUIfEXvN99siGdam9QFTKldkid1rqe9FU5X1HwZT1mKXZSXKqV6sg&DisplayName=Rajesh%20Goel
+import chromadb
+from sentence_transformers import SentenceTransformer
+from chromadb.utils.errors import ChromaError
+import logging
 
-from langchain.chat_models import ChatOpenAI
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-llm = ChatOpenAI(
-    base_url="http://your-gpu-server:8000/v1",
-    model="mistral",
-    temperature=0
-)
+class ChromaDBHandler:
+    def __init__(self, collection_name="default_collection", embedding_model="all-MiniLM-L6-v2"):
+        try:
+            self.client = chromadb.PersistentClient(path="./chroma_db")  # Persistent storage
+            self.collection = self.client.get_or_create_collection(collection_name)
+            self.model = SentenceTransformer(embedding_model)
+            logging.info("ChromaDB and embedding model initialized successfully.")
+        except Exception as e:
+            logging.error(f"Initialization failed: {e}")
+            raise
 
+    def generate_embedding(self, text):
+        if not text or not isinstance(text, str):
+            logging.error("Invalid text input for embedding generation.")
+            return None
+        try:
+            return self.model.encode(text, convert_to_numpy=True).tolist()
+        except Exception as e:
+            logging.error(f"Embedding generation failed: {e}")
+            return None
 
-from langchain.tools import Tool
-from langchain.utilities import WikipediaAPIWrapper
+    def add_document(self, doc_id, text, metadata=None):
+        if not doc_id or not text:
+            logging.error("Document ID and text are required.")
+            return False
+        
+        embedding = self.generate_embedding(text)
+        if embedding is None:
+            logging.error("Skipping document insertion due to embedding failure.")
+            return False
+        
+        try:
+            self.collection.add(ids=[doc_id], embeddings=[embedding], documents=[text], metadatas=[metadata or {}])
+            logging.info(f"Document {doc_id} added successfully.")
+            return True
+        except ChromaError as e:
+            logging.error(f"ChromaDB error while adding document: {e}")
+        except Exception as e:
+            logging.error(f"Unexpected error while adding document: {e}")
+        return False
 
-wiki = WikipediaAPIWrapper()
-wiki_tool = Tool(
-    name="WikipediaSearch",
-    func=wiki.run,
-    description="Search Wikipedia for general knowledge queries."
-)
-tools = [wiki_tool]
+    def query(self, text, n_results=5):
+        embedding = self.generate_embedding(text)
+        if embedding is None:
+            logging.error("Query failed due to embedding generation error.")
+            return []
+        
+        try:
+            results = self.collection.query(query_embeddings=[embedding], n_results=n_results)
+            return results
+        except ChromaError as e:
+            logging.error(f"ChromaDB query error: {e}")
+        except Exception as e:
+            logging.error(f"Unexpected error during query: {e}")
+        return []
 
-
-from langchain.agents import AgentExecutor, LLMSingleActionAgent
-from langchain.agents.agent import AgentOutputParser
-from langchain.schema import AgentAction, AgentFinish
-from langchain.prompts import PromptTemplate
-from langchain.memory import ConversationBufferMemory
-import re
-
-# Custom Prompt
-prompt_template = """You are a helpful AI agent. Given the input question, you must determine the best action using the available tools.
-
-Question: {input}
-Thought: {agent_scratchpad}
-"""
-
-prompt = PromptTemplate(
-    template=prompt_template, input_variables=["input", "agent_scratchpad"]
-)
-
-# Custom Output Parser
-class CustomOutputParser(AgentOutputParser):
-    def parse(self, text: str):
-        match = re.search(r"Action: (.+?)\nAction Input: (.+)", text, re.DOTALL)
-        if match:
-            return AgentAction(tool=match.group(1), tool_input=match.group(2), log=text)
-        else:
-            return AgentFinish(return_values={"output": text}, log=text)
-
-output_parser = CustomOutputParser()
-
-# Custom Agent
-class CustomAgent(LLMSingleActionAgent):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-agent = CustomAgent(
-    llm_chain=llm,
-    output_parser=output_parser,
-    stop_sequence=["\n"],
-)
-
-# Agent Executor
-agent_executor = AgentExecutor(
-    agent=agent,
-    tools=tools,
-    verbose=True
-)
-
-
-response = agent_executor.run("Who is Albert Einstein?")
-print(response)
-
-
+# Example usage
+if __name__ == "__main__":
+    chroma_handler = ChromaDBHandler()
+    chroma_handler.add_document("1", "This is a sample document.")
+    response = chroma_handler.query("sample")
+    print("Query results:", response)
