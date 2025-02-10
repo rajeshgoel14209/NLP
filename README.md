@@ -1,69 +1,61 @@
-import re
-import string
-from collections import Counter
-from typing import List, Tuple
-from sklearn.metrics import precision_score, recall_score, f1_score
+1. Create a Custom LLM Wrapper for LangChain
 
-def normalize_answer(s: str) -> str:
-    """Lowercase, remove punctuation, and normalize whitespace."""
-    s = s.lower()
-    s = re.sub(r"\b(a|an|the)\b", " ", s)  # Remove articles
-    s = re.sub(f"[{string.punctuation}]", "", s)  # Remove punctuation
-    s = " ".join(s.split())  # Normalize whitespace
-    return s
+2. from langchain.llms.base import LLM
+from typing import Any, List, Optional
 
-def compute_exact_match(prediction: str, ground_truth: str) -> float:
-    """Compute exact match score."""
-    return float(normalize_answer(prediction) == normalize_answer(ground_truth))
-
-def compute_f1_score(prediction: str, ground_truth: str) -> float:
-    """Compute F1-score (token overlap)."""
-    pred_tokens = normalize_answer(prediction).split()
-    truth_tokens = normalize_answer(ground_truth).split()
-
-    if not pred_tokens or not truth_tokens:
-        return float(pred_tokens == truth_tokens)
-
-    common = Counter(pred_tokens) & Counter(truth_tokens)
-    num_same = sum(common.values())
-
-    if num_same == 0:
-        return 0.0
-
-    precision = num_same / len(pred_tokens)
-    recall = num_same / len(truth_tokens)
-    f1 = (2 * precision * recall) / (precision + recall)
+class CustomLLM(LLM):
+    """Custom LLM wrapper for integrating with Mistral Agent."""
     
-    return f1
+    def __init__(self, api_endpoint: str, api_key: Optional[str] = None):
+        super().__init__()
+        self.api_endpoint = api_endpoint
+        self.api_key = api_key  # If needed for authentication
 
-def evaluate_rag_pipeline(questions: List[str], actual_answers: List[str], rag_pipeline) -> dict:
-    """Evaluates RAG pipeline accuracy using EM and F1-score."""
-    em_scores, f1_scores = [], []
+    @property
+    def _llm_type(self) -> str:
+        return "custom_llm"
 
-    for question, ground_truth in zip(questions, actual_answers):
-        retrieved_answer = rag_pipeline(question)  # Call your RAG model
+    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+        """Sends the prompt to the custom LLM API and returns the response."""
+        import requests
+        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+        response = requests.post(
+            self.api_endpoint, json={"prompt": prompt, "stop": stop}, headers=headers
+        )
+        return response.json().get("text", "")
 
-        em = compute_exact_match(retrieved_answer, ground_truth)
-        f1 = compute_f1_score(retrieved_answer, ground_truth)
 
-        em_scores.append(em)
-        f1_scores.append(f1)
+from langchain.chat_models import ChatOpenAI
+from langchain.agents import AgentType, initialize_agent
+from langchain.tools import Tool
 
-        print(f"Q: {question}\nGround Truth: {ground_truth}\nPredicted: {retrieved_answer}\nEM: {em:.2f}, F1: {f1:.2f}\n")
+# Initialize custom LLM
+custom_llm = CustomLLM(api_endpoint="http://localhost:8000/generate")
 
-    return {
-        "Exact Match Accuracy": sum(em_scores) / len(em_scores),
-        "F1 Score": sum(f1_scores) / len(f1_scores)
-    }
+# Define a sample tool
+def sample_tool(query: str) -> str:
+    return f"Processed query: {query}"
 
-# Example Usage
-if __name__ == "__main__":
-    def mock_rag_pipeline(question: str) -> str:
-        """Replace this with your actual RAG pipeline function."""
-        return "Mock answer for: " + question
+tool = Tool(
+    name="SampleTool",
+    func=sample_tool,
+    description="A tool that processes a given query."
+)
 
-    test_questions = ["What is the capital of France?", "Who wrote 1984?"]
-    actual_answers = ["Paris", "George Orwell"]
+# Create an agent using the custom LLM
+agent_executor = initialize_agent(
+    tools=[tool],
+    llm=custom_llm,  # Use the custom LLM here
+    agent=AgentType.OPENAI_FUNCTIONS,  # Mistral-style agent
+    verbose=True
+)
 
-    results = evaluate_rag_pipeline(test_questions, actual_answers, mock_rag_pipeline)
-    print("Final Evaluation Results:", results)
+# Run the agent
+response = agent_executor.run("Tell me about LangChain?")
+print(response)
+
+
+3. Verify and Test
+Start your custom LLM server (e.g., via FastAPI).
+Ensure your custom LLM endpoint is accessible.
+Run the agent script and check if the Mistral agent properly calls your custom LLM.
