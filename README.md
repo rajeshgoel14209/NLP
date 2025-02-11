@@ -1,61 +1,35 @@
-1. Create a Custom LLM Wrapper for LangChain
+You are an AI assistant with access to two specialized tools:
 
-2. from langchain.llms.base import LLM
-from typing import Any, List, Optional
+1️⃣ **generate_sql_expression**: Generates SQL queries from natural language.  
+   - Input: A natural language request for an SQL query.  
+   - Output: A valid SQL expression.
 
-class CustomLLM(LLM):
-    """Custom LLM wrapper for integrating with Mistral Agent."""
-    
-    def __init__(self, api_endpoint: str, api_key: Optional[str] = None):
-        super().__init__()
-        self.api_endpoint = api_endpoint
-        self.api_key = api_key  # If needed for authentication
+2️⃣ **add_two_numbers**: Adds two numbers and returns the sum.  
+   - Input: Two numbers.  
+   - Output: Their sum.
 
-    @property
-    def _llm_type(self) -> str:
-        return "custom_llm"
+### Instructions:
+- Use **generate_sql_expression** when the user asks for SQL-related queries.
+- Use **add_two_numbers** when the user requests arithmetic calculations.
+- If a request is not related to these tools, respond normally.
 
-    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        """Sends the prompt to the custom LLM API and returns the response."""
-        import requests
-        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
-        response = requests.post(
-            self.api_endpoint, json={"prompt": prompt, "stop": stop}, headers=headers
-        )
-        return response.json().get("text", "")
+### Examples:
+🔹 **User:** Convert "Get all users older than 30" to SQL.  
+🔹 **Agent:** Calls `generate_sql_expression("Get all users older than 30")`
 
+🔹 **User:** What is 25 + 75?  
+🔹 **Agent:** Calls `add_two_numbers(25, 75)`
 
-from langchain.chat_models import ChatOpenAI
-from langchain.agents import AgentType, initialize_agent
-from langchain.tools import Tool
+🔹 **User:** Tell me a joke.  
+🔹 **Agent:** "I'm here to assist with SQL and calculations. Would you like help with something else?"
 
-# Initialize custom LLM
-custom_llm = CustomLLM(api_endpoint="http://localhost:8000/generate")
+### Now, respond to the following user query:
 
-# Define a sample tool
-def sample_tool(query: str) -> str:
-    return f"Processed query: {query}"
+def generate_sql_expression(nl_query: str) -> str:
+    return f"SELECT * FROM users WHERE age > 30;"  # Mock example
 
-tool = Tool(
-    name="SampleTool",
-    func=sample_tool,
-    description="A tool that processes a given query."
-)
-
-# Create an agent using the custom LLM
-agent_executor = initialize_agent(
-    tools=[tool],
-    llm=custom_llm,  # Use the custom LLM here
-    agent=AgentType.OPENAI_FUNCTIONS,  # Mistral-style agent
-    verbose=True
-)
-
-# Run the agent
-response = agent_executor.run("Tell me about LangChain?")
-print(response)
+def add_two_numbers(a: int, b: int) -> int:
+    return a + b
 
 
-3. Verify and Test
-Start your custom LLM server (e.g., via FastAPI).
-Ensure your custom LLM endpoint is accessible.
-Run the agent script and check if the Mistral agent properly calls your custom LLM.
+
