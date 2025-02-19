@@ -1,37 +1,39 @@
-pip install llama-index openai
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+
+# Load LLaMA 2-7B OpenLLaMA model
+model_name = "openlm-research/open_llama_7b"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype=torch.float16)
+
+def llama_generate(prompt):
+    inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
+    output = model.generate(**inputs, max_length=512)
+    return tokenizer.decode(output[0], skip_special_tokens=True)
+
 
 from llama_index.tools import QueryEngineTool
 from llama_index.query_engine import PandasQueryEngine
-from llama_index.llms import OpenAI
 import pandas as pd
 
+df = pd.read_csv("data.csv")
+query_engine_pandas = PandasQueryEngine(df)
 
-df = pd.read_csv("your_data.csv")
-query_engine = PandasQueryEngine(df)
-
-query_tool = QueryEngineTool(
-    query_engine=query_engine,
-    metadata={"name": "data_tool", "description": "Query the dataset for insights"}
+pandas_tool = QueryEngineTool(
+    query_engine=query_engine_pandas,
+    metadata={"name": "pandas_tool", "description": "Queries structured data from a CSV file"}
 )
 
-from llama_index.agent import OpenAIAgent
 
-llm = OpenAI(model="gpt-4")  # Use your preferred model
-agent = OpenAIAgent.from_tools([query_tool], llm=llm)
+from llama_index.tools import WikipediaQueryEngine
 
-response = agent.query("What is the average value of column X?")
-print(response)
+wiki_engine = WikipediaQueryEngine()
 
-from llama_index.llms import CustomLLM
-import requests
+wiki_tool = QueryEngineTool(
+    query_engine=wiki_engine,
+    metadata={"name": "wiki_tool", "description": "Fetches information from Wikipedia"}
+)
 
-class MistralLLM(CustomLLM):
-    def __init__(self, api_url: str):
-        self.api_url = api_url
-
-    def complete(self, prompt: str, **kwargs):
-        response = requests.post(self.api_url, json={"prompt": prompt, "temperature": 0.7, "max_tokens": 512})
-        return response.json()["response"]  # Modify based on your API response format
 
 from llama_index.vector_stores import ChromaVectorStore
 from llama_index.query_engine import RetrieverQueryEngine
@@ -39,35 +41,40 @@ from llama_index.storage.storage_context import StorageContext
 from llama_index.retrievers import VectorIndexRetriever
 from llama_index import VectorStoreIndex, SimpleDirectoryReader
 
-# Load documents
-documents = SimpleDirectoryReader("data/").load_data()
-
-# Create ChromaDB vector store
+# Load documents into ChromaDB
+documents = SimpleDirectoryReader("docs/").load_data()
 chroma_store = ChromaVectorStore(persist_dir="./chroma_db")
 storage_context = StorageContext.from_defaults(vector_store=chroma_store)
-
-# Index the documents
 index = VectorStoreIndex.from_documents(documents, storage_context=storage_context)
 
-# Create a retriever and query engine
 retriever = VectorIndexRetriever(index=index, similarity_top_k=5)
-query_engine = RetrieverQueryEngine(retriever=retriever)
+query_engine_chroma = RetrieverQueryEngine(retriever=retriever)
 
-from llama_index.tools import QueryEngineTool
-
-query_tool = QueryEngineTool(
-    query_engine=query_engine,
-    metadata={"name": "chroma_query_tool", "description": "Retrieves information from ChromaDB"}
+chroma_tool = QueryEngineTool(
+    query_engine=query_engine_chroma,
+    metadata={"name": "chroma_tool", "description": "Retrieves context from ChromaDB for RAG"}
 )
+
+4. Register Tools and Create an Agent
 
 from llama_index.agent import OpenAIAgent
 
+class MistralLLM:
+    def __init__(self, model_name="mistralai/Mistral-7B-Instruct"):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype=torch.float16)
+
+    def complete(self, prompt: str):
+        inputs = self.tokenizer(prompt, return_tensors="pt").to("cuda")
+        output = self.model.generate(**inputs, max_length=512)
+        return self.tokenizer.decode(output[0], skip_special_tokens=True)
+
 # Initialize Mistral LLM
-mistral_llm = MistralLLM(api_url="http://your-server:8000/completion")  # Change to your actual Mistral API URL
+mistral_llm = MistralLLM()
 
-# Create the agent
-agent = OpenAIAgent.from_tools([query_tool], llm=mistral_llm)
+# Create agent with tools
+agent = OpenAIAgent.from_tools([pandas_tool, wiki_tool, chroma_tool], llm=mistral_llm)
 
-# Test the agent
-response = agent.query("What does the document say about AI advancements?")
+# Query the agent
+response = agent.query("What is the GDP of India in 2023?")
 print(response)
