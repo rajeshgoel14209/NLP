@@ -1,5 +1,3 @@
-[https://blog.gopenai.com/fine-tuning-re-ranking-models-a-beginners-guide-066b4b9c3ecf](https://medium.com/@sasirekharameshkumar/evaluating-the-responses-from-language-models-part-2-informational-accuracy-9eb3e71a8701)
-
-https://medium.com/towards-data-science/top-evaluation-metrics-for-rag-failures-acb27d2a5485
-
-
+https://medium.com/@ypredofficial/interacting-with-sql-query-using-langchains-sqlchain-884f77f67aae
+https://blog.gopenai.com/unveiling-the-magic-behind-langchain-sqlchain-a-deep-dive-48c99301920f
+https://medium.com/dataherald/how-to-langchain-sqlchain-c7342dd41614
