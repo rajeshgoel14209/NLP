@@ -189,4 +189,67 @@ for rank, (text, score) in enumerate(sorted_results, 1):
     print(f"{rank}. {text} (Score: {score:.4f})")
 
 
+#########################################################################################
+
+import jiwer
+import nltk
+import torch
+import gensim.downloader as api
+from nltk.translate.bleu_score import sentence_bleu
+from rouge_score import rouge_scorer
+from nltk.translate.meteor_score import meteor_score
+from bert_score import score
+from gensim.models import KeyedVectors
+from scipy.spatial.distance import cdist
+
+# Download necessary NLTK resources
+nltk.download("wordnet")
+nltk.download("omw-1.4")
+
+# Load a pre-trained Word2Vec model for Word Movers’ Distance (WMD)
+word_vectors = api.load("word2vec-google-news-300")  # Uses Google's Word2Vec model
+
+# Example Responses
+actual_response = "Machine learning helps in predictive analytics by analyzing data patterns."
+llm_response = "Predictive analytics is improved by machine learning through data pattern analysis."
+
+# 1. **Word Error Rate (WER)**
+wer = jiwer.wer(actual_response, llm_response)
+
+# 2. **BLEU Score**
+actual_tokens = [actual_response.split()]
+llm_tokens = llm_response.split()
+bleu_score = sentence_bleu(actual_tokens, llm_tokens)
+
+# 3. **ROUGE Scores**
+scorer = rouge_scorer.RougeScorer(["rouge1", "rouge2", "rougeL"], use_stemmer=True)
+rouge_scores = scorer.score(actual_response, llm_response)
+
+# 4. **METEOR Score**
+meteor = meteor_score([actual_response.split()], llm_response.split())
+
+# 5. **BERTScore**
+P, R, F1 = score([llm_response], [actual_response], lang="en")
+bert_f1 = F1.mean().item()
+
+# 6. **Word Movers' Distance (WMD)**
+def wmd_distance(sent1, sent2):
+    sent1 = [word for word in sent1.lower().split() if word in word_vectors]
+    sent2 = [word for word in sent2.lower().split() if word in word_vectors]
     
+    if not sent1 or not sent2:
+        return float("inf")  # Return a high distance if no valid words
+
+    return word_vectors.wmdistance(sent1, sent2)
+
+wmd_score = wmd_distance(actual_response, llm_response)
+
+# Print all scores
+print(f"Word Error Rate (WER): {wer:.4f}")
+print(f"BLEU Score: {bleu_score:.4f}")
+print(f"ROUGE-1: {rouge_scores['rouge1'].fmeasure:.4f}")
+print(f"ROUGE-2: {rouge_scores['rouge2'].fmeasure:.4f}")
+print(f"ROUGE-L: {rouge_scores['rougeL'].fmeasure:.4f}")
+print(f"METEOR Score: {meteor:.4f}")
+print(f"BERTScore (F1): {bert_f1:.4f}")
+print(f"Word Movers' Distance (WMD): {wmd_score:.4f}")
