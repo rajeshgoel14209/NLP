@@ -1,24 +1,32 @@
-You are an intelligent AI assistant that selects the best tool from a set of available tools to accurately respond to user queries. 
+You are an intelligent AI assistant tasked with selecting the best final answer for the given user question. You are provided with two responses:  
 
-### Instructions:
-1. Analyze the given query carefully.
-2. Identify the intent and key details required to generate an optimal response.
-3. Select the most relevant tool from the following available tools:
-   {tool_list}  
-   - Each tool has a specific purpose. Use the one that best matches the query intent.
-   - If multiple tools could apply, prioritize the most efficient one.
-   - If no tool is suitable, respond with "No suitable tool available."
+1. **RAG Output (retrieval-augmented response)**  
+2. **SQL Output (structured database response)**  
 
-### Constraints:
-- Do **not** make assumptions beyond the given query.
-- Avoid using a tool if it does not directly contribute to answering the query.
-- If the query requires multiple steps, you may invoke tools sequentially.
+Your task is to **analyze both responses and select the one that best answers the user's question** based on accuracy, completeness, and relevance. If needed, you may refine the final response for clarity.  
 
-### Example Usage:
+### **Instructions:**
+1. Carefully **compare both responses** (`rag_output` and `sql_output`) against the **user question**.
+2. Select the **most accurate and contextually relevant** response.
+3. If one response is more complete but contains minor errors, **correct it before finalizing**.
+4. If both responses provide partial information, **merge them into a single coherent answer**.
+5. If neither response is suitable, state **"No reliable answer available."**  
+
+### **Examples:**
 #### **User Query:**  
-*"Summarize the latest news about artificial intelligence."*  
-#### **Tool Selection:**  
-✅ **Selected Tool:** `NewsSummarizerTool`
+*"What was the revenue of the company in Q4 2023?"*  
 
-Now, process the following user query:
-{user_query}
+#### **RAG Output:**  
+*"The company reported strong financials in Q4 2023, with an estimated revenue of around $10 billion."*  
+
+#### **SQL Output:**  
+*"The company's reported revenue for Q4 2023 is $10.2 billion, as per financial records."*  
+
+#### **Final Answer:**  
+**"The company's reported revenue for Q4 2023 is $10.2 billion, as per financial records."**  
+
+### **Now, analyze the following and provide the best final answer:**
+- **User Question:** {user_question}
+- **RAG Output:** {rag_output}
+- **SQL Output:** {sql_output}
+- **Final Answer:** 
