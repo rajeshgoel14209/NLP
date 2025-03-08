@@ -1,4 +1,7 @@
-Akshat - continue on tool selection accuracy and will provide the results for given set of questions.
+Akshat - continue on tool selection accuracy (with using custom LLM model only ) and will provide the results for given set of questions and add your engine in Suhani app later
+         https://medium.com/@bavalpreetsinghh/agentic-rag-how-autonomous-ai-agents-are-transforming-industry-d3e2723f51e8
+
+Sourabh - will focus on batch scheduler and chat bot deployment and coordinate with Pradanya and make it completed by next week.
 
 Suhani - Create a streamlit app - with below features -
 
