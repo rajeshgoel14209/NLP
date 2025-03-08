@@ -1,32 +1,58 @@
-from fastapi import FastAPI, Header, HTTPException
-from pydantic import BaseModel
-from typing import Optional
+Akshat - continue on tool selection accuracy and will provide the results for given set of questions.
 
-app = FastAPI()
+Suhani - Create a streamlit app - with below features -
 
-# Define request body model
-class ChatRequest(BaseModel):
-    query: str
-    chatInitiator: Optional[str] = None
+         ################################################################################################################################
+		 
+		                                         MODEL EVALUATION DASHBOARD IN STREAMLIT
+		 
+		 ################################################################################################################################
 
-# Define the POST API
-@app.post("/jarvis/chat/query")
-async def jarvis_chat(
-    chat_request: ChatRequest,
-    caseID: str = Header(None),
-    userID: str = Header(None),
-    username: str = Header(None)
-):
-    # Validate required headers
-    if not caseID or not userID or not username:
-        raise HTTPException(status_code=400, detail="Missing required headers: caseID, userID, username")
 
-    return {
-        "message": "Chat query received successfully!",
-        "headers": {
-            "caseID": caseID,
-            "userID": userID,
-            "username": username
-        },
-        "payload": chat_request
-    }
+
+         ################################
+		 
+		        UPLOAD TEST CASES 
+		 
+		 ################################
+
+         Step 01 - Upload the test cases file (start testing with 8 -10 questions) ==>  should have questions , answers , retriever chunk , retriever chunk id (optional)
+		 
+		 
+		 
+         ################################
+		 
+		        START RETREIVER ENGINE
+		 
+		 ################################		 
+		 
+		 step 02 - Start retriever engine on clicking retriever engine button.
+		 
+		           Step 01 - Set the retriver count on UI and Hit retriever API and save all the top k chunks in the sheet ( add each chunk in new column of sheet for give question )
+				   Step 02 - Once completed , enable downoad button to download test cases file updated with retriever results.
+				   
+		 step 03 - Click on download button to download retriever file.
+		 
+         ################################
+		 
+		        START LLM ENGINE
+		 
+		 ################################	
+
+         step 04 - Upload test cases with retriever results.		 
+				   
+		 step 05 - Start LLM engine on clicking retriever engine button.
+		 
+		           Step 01 - Hit generate answer API and generate answer using retriever context and question and save response in the sheet
+				   Step 02 - Once completed , enable downoad button to download test cases file updated with retriever results and LLM response.
+				   Step 03 - Calculate acuracy also				   
+
+
+         ################################
+		 
+		        START EVALUATION ENGINE
+		 
+		 ################################
+		 
+		 step 06 - Select evaluation parameter from drop down on UI
+		 step 07 - Click on evaluate LLM response and generate score
