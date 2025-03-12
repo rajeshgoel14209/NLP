@@ -1,3 +1,5 @@
+https://djajafer.medium.com/create-a-rag-agent-with-langgraph-to-extract-the-information-from-a-pdf-file-1975221c8e89
+
 import olmocr
 import fitz  # PyMuPDF for extracting images
 import re
