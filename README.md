@@ -75,3 +75,36 @@ if __name__ == "__main__":
             f.write("\n".join(content) + "\n\n")
 
     print("Structured extraction complete! Saved to structured_output.txt.")
+
+
+
+############################################################################################################################
+
+
+from transformers import AutoProcessor, Blip2ForConditionalGeneration, AutoTokenizer, AutoModelForCausalLM
+import torch
+from PIL import Image
+
+# Load BLIP-2 Vision Encoder
+blip_processor = AutoProcessor.from_pretrained("Salesforce/blip2-opt-2.7b")
+blip_model = Blip2ForConditionalGeneration.from_pretrained("Salesforce/blip2-opt-2.7b")
+
+# Load Mistral-7B Model
+mistral_tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct")
+mistral_model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-Instruct")
+
+# Process Image
+image = Image.open("image.jpg")
+inputs = blip_processor(image, return_tensors="pt")
+
+# Generate image description
+blip_output = blip_model.generate(**inputs)
+image_caption = blip_processor.batch_decode(blip_output, skip_special_tokens=True)[0]
+
+# Use Mistral to answer based on the image caption
+query = f"Describe this image in detail: {image_caption}"
+inputs = mistral_tokenizer(query, return_tensors="pt")
+output = mistral_model.generate(**inputs)
+
+response = mistral_tokenizer.decode(output[0], skip_special_tokens=True)
+print(response)
