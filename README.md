@@ -1,61 +1,77 @@
-Akshat - continue on tool selection accuracy (with using custom LLM model only ) and will provide the results for given set of questions and add your engine in Suhani app later
-         https://medium.com/@bavalpreetsinghh/agentic-rag-how-autonomous-ai-agents-are-transforming-industry-d3e2723f51e8
+import olmocr
+import fitz  # PyMuPDF for extracting images
+import re
+import spacy
+from pypdf import PdfReader
 
-Sourabh - will focus on batch scheduler and chat bot deployment and coordinate with Pradanya and make it completed by next week.
+# Load NLP model for text processing
+nlp = spacy.load("en_core_web_sm")
 
-Suhani - Create a streamlit app - with below features -
+def extract_text_from_pdf(pdf_path):
+    """Extract text from a PDF using olmOCR, falling back to OCR if needed."""
+    reader = PdfReader(pdf_path)
+    full_text = ""
 
-         ################################################################################################################################
-		 
-		                                         MODEL EVALUATION DASHBOARD IN STREAMLIT
-		 
-		 ################################################################################################################################
+    for page_num in range(len(reader.pages)):
+        page = reader.pages[page_num]
+        text = page.extract_text()
 
+        # If text extraction fails, use OCR
+        if not text.strip():
+            print(f"Using OCR on page {page_num + 1}")
+            images = extract_images_from_pdf(pdf_path, page_num)
+            for img in images:
+                text += olmocr.ocr(img)
 
+        full_text += text + "\n\n"
 
-         ################################
-		 
-		        UPLOAD TEST CASES 
-		 
-		 ################################
+    return full_text
 
-         Step 01 - Upload the test cases file (start testing with 8 -10 questions) ==>  should have questions , answers , retriever chunk , retriever chunk id (optional)
-		 
-		 
-		 
-         ################################
-		 
-		        START RETREIVER ENGINE
-		 
-		 ################################		 
-		 
-		 step 02 - Start retriever engine on clicking retriever engine button.
-		 
-		           Step 01 - Set the retriver count on UI and Hit retriever API and save all the top k chunks in the sheet ( add each chunk in new column of sheet for give question )
-				   Step 02 - Once completed , enable downoad button to download test cases file updated with retriever results.
-				   
-		 step 03 - Click on download button to download retriever file.
-		 
-         ################################
-		 
-		        START LLM ENGINE
-		 
-		 ################################	
+def extract_images_from_pdf(pdf_path, page_num):
+    """Extract images from a specific PDF page using PyMuPDF."""
+    doc = fitz.open(pdf_path)
+    page = doc[page_num]
+    images = []
 
-         step 04 - Upload test cases with retriever results.		 
-				   
-		 step 05 - Start LLM engine on clicking retriever engine button.
-		 
-		           Step 01 - Hit generate answer API and generate answer using retriever context and question and save response in the sheet
-				   Step 02 - Once completed , enable downoad button to download test cases file updated with retriever results and LLM response.
-				   Step 03 - Calculate acuracy also				   
+    for img in page.get_images(full=True):
+        xref = img[0]
+        base_image = doc.extract_image(xref)
+        image_bytes = base_image["image"]
+        images.append(image_bytes)
 
+    return images
 
-         ################################
-		 
-		        START EVALUATION ENGINE
-		 
-		 ################################
-		 
-		 step 06 - Select evaluation parameter from drop down on UI
-		 step 07 - Click on evaluate LLM response and generate score
+def identify_headers_and_sections(text):
+    """Identify headers, sections, and subsections using NLP and regex."""
+    headers = []
+    structured_content = {}
+
+    # Split text into lines
+    lines = text.split("\n")
+
+    for line in lines:
+        line = line.strip()
+
+        # Identify headers using regex (example: "1. Introduction" or "Section 2.3")
+        if re.match(r'^\d+(\.\d+)*\s+[A-Za-z]', line):
+            headers.append(line)
+            structured_content[line] = []
+        elif headers:
+            structured_content[headers[-1]].append(line)
+
+    return structured_content
+
+# Example usage
+if __name__ == "__main__":
+    pdf_file = "sample.pdf"  # Replace with your PDF file path
+    extracted_text = extract_text_from_pdf(pdf_file)
+    
+    structured_data = identify_headers_and_sections(extracted_text)
+
+    # Save structured data
+    with open("structured_output.txt", "w", encoding="utf-8") as f:
+        for header, content in structured_data.items():
+            f.write(header + "\n")
+            f.write("\n".join(content) + "\n\n")
+
+    print("Structured extraction complete! Saved to structured_output.txt.")
