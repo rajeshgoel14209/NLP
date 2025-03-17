@@ -1,4 +1,6 @@
 https://djajafer.medium.com/create-a-rag-agent-with-langgraph-to-extract-the-information-from-a-pdf-file-1975221c8e89
+https://medium.com/@vipra_singh/ai-agent-workflow-vs-agent-part-5-2026a890a33d
+https://github.com/vikrambhat2/AgenticRAG/tree/main/AgenticRAG%20with%20CrewAI
 
 import olmocr
 import fitz  # PyMuPDF for extracting images
