@@ -1,25 +1,31 @@
-# Step 1: First filter - Select documents where 'category' is 'technology'
-first_filter = {"category": {"$eq": "technology"}}
-step1_results = collection.query(
-    query_texts=["AI advancements"],
-    n_results=10,
-    where=first_filter
-)
+1. Query Expansion
+Synonym Expansion: Use WordNet or LLMs to add synonyms to the query.
 
-# Extract IDs of filtered documents
-filtered_ids = step1_results.get("ids", [])
+Keyword Augmentation: Generate similar phrases using NLP models.
 
-# Step 2: Apply second filter - Filter documents from Step 1 where 'year' is >= 2020
-if filtered_ids:
-    second_filter = {
-        "year": {"$gte": 2020},
-        "id": {"$in": filtered_ids}  # Only apply to previously filtered results
-    }
-    
-    step2_results = collection.query(
-        query_texts=["AI advancements"],
-        n_results=5,
-        where=second_filter
-    )
+Embedding Expansion: Use multiple embeddings for query variations.
 
-    print(step2_results)
+2. Hybrid Search (Dense + Sparse Retrieval)
+Combine semantic search (vector embeddings) with BM25 (keyword-based retrieval) to improve accuracy.
+
+Use weighted fusion of results from ChromaDB and BM25.
+
+3. Contextual Embeddings
+Use a cross-encoder to re-rank results by relevance.
+
+Use query rewriting models (T5, GPT) to generate better queries.
+
+4. Adaptive Search Parameters
+Adjust similarity threshold to avoid overly generic results.
+
+Increase top-k retrieval and re-rank results.
+
+5. Metadata Filtering
+Use metadata tags (e.g., categories, timestamps) to refine retrieval.
+
+Implement hybrid filtering (e.g., keyword + vector search).
+
+6. Query Preprocessing
+Convert queries to lowercase and remove stopwords only if needed.
+
+Use lemmatization instead of stemming for better matching.
