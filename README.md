@@ -40,3 +40,15 @@ try:
     print(10 / 0)
 except ZeroDivisionError as e:
     print("Error:", e)
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    return jsonify({"error": str(e)}), 500  # Returns HTTP 500 instead of crashing
+
+class ConfigError(Exception):
+    """Raised when the config file is invalid or missing"""
+
+try:
+    raise ConfigError("Invalid config format")
+except ConfigError as e:
+    print(f"Configuration Error: {e}")
