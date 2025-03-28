@@ -1,24 +1,42 @@
-from apscheduler.schedulers.background import BackgroundScheduler
-import os
-import signal
-import time
+SyntaxError
+    Raised when there is a syntax mistake in the code.
+	
+TypeError
+    Raised when an operation is performed on an inappropriate type.
+	
+ValueError 
+    Raised when an argument has the right type but an invalid value.
 
-def restart_fastapi():
-    print("Restarting FastAPI...")
-    os.kill(os.getpid(), signal.SIGTERM)  # Kills and restarts FastAPI
+IndexError
+    Raised when accessing an index that is out of range.
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(restart_fastapi, "interval", hours=6)  # Restart every 6 hours
-scheduler.start()
+KeyError
+    Raised when accessing a dictionary key that does not exist.
 
-# FastAPI App
-from fastapi import FastAPI
-app = FastAPI()
+AttributeError
+    Raised when an invalid attribute is accessed on an object.
+	
+NameError
+    Raised when trying to access an undefined variable.
+	
+FileNotFoundError
+    Raised when trying to open a non-existing file.
+	
+PermissionError
+    Raised when trying to access a file without proper permissions.
 
-@app.get("/")
-def read_root():
-    return {"message": "FastAPI is running"}
+OverflowError
+     Raised when a calculation exceeds the maximum limit.
 
-import uvicorn
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+ImportError
+    Raised when a module cannot be imported.
+	
+ModuleNotFoundError 
+    A subclass of ImportError when a module is not found.
+
+example - 
+	
+try:
+    print(10 / 0)
+except ZeroDivisionError as e:
+    print("Error:", e)
