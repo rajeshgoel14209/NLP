@@ -52,3 +52,31 @@ try:
     raise ConfigError("Invalid config format")
 except ConfigError as e:
     print(f"Configuration Error: {e}")
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+import os
+
+app = FastAPI()
+
+# Define the directory where logs are stored
+LOG_DIR = "logs"
+
+@app.get("/download-log/{filename}")
+async def download_log(filename: str):
+    """API to download a log file from the server."""
+    file_path = os.path.join(LOG_DIR, filename)
+
+    # Validate the file path (prevent directory traversal)
+    if not os.path.abspath(file_path).startswith(os.path.abspath(LOG_DIR)):
+        raise HTTPException(status_code=403, detail="Access denied!")
+
+    # Check if the file exists
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="Log file not found")
+
+    # Serve the log file as a download
+    return FileResponse(file_path, media_type="text/plain", filename=filename)
+
+
+    http://127.0.0.1:8000/download-log/app.log
