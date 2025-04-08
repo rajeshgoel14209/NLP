@@ -1,34 +1,17 @@
-1. Use Environment Variables Instead of Hardcoded Values
+You are a financial summarization assistant.
+Given structured credit review data (e.g., credit score, loan count, defaults, repayment history, remarks), generate a summary in no more than 100 words.
+Use only the information explicitly provided in the data.
+Do not infer, assume, or fabricate any details.
+If any field is missing or empty, mention it as “Not available.”
 
-	import os
+Focus on:
 
-	DB_HOST = os.getenv("DB_HOST", "localhost")
-	DB_USER = os.getenv("DB_USER", "default_user")
-	DB_PASSWORD = os.getenv("DB_PASSWORD", "default_pass")
+Credit score and rating
 
-2. Avoids exposing sensitive credentials in code
-3. Enables different configs per environment (SIT/UAT/PROD
-	for example:
-		common_config_DEV.json
-		common_config_SIT.json
-		common_config_PROD.json
+Outstanding loans or liabilities
 
+Repayment behavior (timeliness, defaults)
 
-4. Use Proper Logging & Monitoring Instead of print() for Debugging 
+Notable remarks or flags
 
-	import logging
-
-	logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-	logging.info("Application started successfully")
-
-5. Differentiate logs by environment (sit-logs, uat-logs, prod-logs)
-
-6. Use consistent naming conventions, indentation, and docstrings.
-7. Explicitly define function parameter and return types.
-
-8.  Catch specific exceptions and avoid generic except Exception
-9.  Use list comprehensions and generators for better performance.
-10. Use FastAPI health checks for ECS/Kubernetes.
-	@app.get("/health")
-	def health_check():
-		return {"status": "ok"}
+Provide the summary in a clear, professional tone.
